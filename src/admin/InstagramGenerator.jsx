@@ -32,6 +32,16 @@ const EMOJI = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-s
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 
+// Fond autour de la carte. Pour varier le mur Instagram, les racecards tournent
+// sur trois couleurs (vert foncé → vert → rouille) ; le parchemin reste dispo.
+export const FRAMES = {
+  dark: { label: "Vert foncé", bg: "#1B2B20", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.35)" },
+  green: { label: "Vert", bg: "#15793F", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
+  rust: { label: "Rouille", bg: "#C4622D", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
+  parchment: { label: "Parchemin", bg: "#F5F1E6", sign: "#C4622D", shadow: "rgba(27,43,32,0.14)" },
+};
+export const FRAME_ROTATION = ["dark", "green", "rust"];
+
 const CARD = { x: 80, y: 64, w: 920, h: 1150, r: 48, pad: 48 };
 
 function normalize(str) {
@@ -286,7 +296,8 @@ function drawFallbackName(ctx, name, x, y, w, h) {
   ctx.restore();
 }
 
-async function renderRacecard(canvas, race) {
+export async function renderRacecard(canvas, race, frameKey = "parchment") {
+  const frame = FRAMES[frameKey] || FRAMES.parchment;
   await loadFonts();
   const [image, logo] = await Promise.all([
     loadImage(race.image_url),
@@ -304,13 +315,13 @@ async function renderRacecard(canvas, race) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, W, H);
 
-  // Fond parchemin
-  ctx.fillStyle = COLORS.parchment;
+  // Fond (couleur de la rotation)
+  ctx.fillStyle = frame.bg;
   ctx.fillRect(0, 0, W, H);
 
   // Carte blanche avec ombre légère
   ctx.save();
-  ctx.shadowColor = "rgba(27,43,32,0.14)";
+  ctx.shadowColor = frame.shadow;
   ctx.shadowBlur = 48;
   ctx.shadowOffsetY = 14;
   roundRect(ctx, CARD.x, CARD.y, CARD.w, CARD.h, CARD.r);
@@ -544,7 +555,7 @@ async function renderRacecard(canvas, race) {
   ctx.save();
   ctx.font = `400 46px ${DISP}`;
   setLetterSpacing(ctx, 6);
-  ctx.fillStyle = COLORS.rust;
+  ctx.fillStyle = frame.sign;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("ULTRARIDE.EU", W / 2 + 3, bottom + (H - bottom) / 2 + 2);
@@ -632,6 +643,7 @@ export default function InstagramGenerator() {
   const [copied, setCopied] = useState(false);
   const [posts, setPosts] = useState({});
   const [igFilter, setIgFilter] = useState("todo");
+  const [frameKey, setFrameKey] = useState(null);
   const [savingPost, setSavingPost] = useState(false);
   const [igInput, setIgInput] = useState("");
   const [igSaving, setIgSaving] = useState(false);
@@ -764,6 +776,12 @@ export default function InstagramGenerator() {
     setIgSaved(true);
   };
 
+  // Couleur proposée : la suivante dans la rotation, d'après le nombre de
+  // racecards déjà publiées. Modifiable à la main avec les pastilles.
+  const publishedCount = Object.values(posts).filter((p) => p?.published_at).length;
+  const suggestedFrame = FRAME_ROTATION[publishedCount % FRAME_ROTATION.length];
+  const currentFrame = frameKey || suggestedFrame;
+
   useEffect(() => {
     if (!selected || !canvasRef.current) return;
     const seq = ++renderSeq.current;
@@ -771,11 +789,11 @@ export default function InstagramGenerator() {
     setCopied(false);
     setRendering(true);
     setWarnings([]);
-    renderRacecard(canvasRef.current, selected)
+    renderRacecard(canvasRef.current, selected, currentFrame)
       .then((w) => { if (seq === renderSeq.current) setWarnings(w); })
       .catch((e) => { if (seq === renderSeq.current) setWarnings([`Erreur de rendu : ${e.message}`]); })
       .finally(() => { if (seq === renderSeq.current) setRendering(false); });
-  }, [selected]);
+  }, [selected, currentFrame]);
 
   const download = () => {
     const canvas = canvasRef.current;
@@ -871,7 +889,7 @@ export default function InstagramGenerator() {
                     key={r.id}
                     type="button"
                     className={`ig-gen-item${r.id === selectedId ? " active" : ""}`}
-                    onClick={() => setSelectedId(r.id)}
+                    onClick={() => { setSelectedId(r.id); setFrameKey(null); }}
                   >
                     <span>{getFlagEmoji(r.country) || ""} {r.name}</span>
                     <span style={{ display: "flex", gap: 4, flexShrink: 0 }}>
@@ -892,6 +910,26 @@ export default function InstagramGenerator() {
           {!selected && <p className="muted">Choisis un ultra dans la liste pour générer sa vignette.</p>}
           <div style={{ display: selected ? "block" : "none" }}>
             <canvas ref={canvasRef} width={W} height={H} className="ig-gen-canvas" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0 0", flexWrap: "wrap" }}>
+              <span className="muted" style={{ fontSize: 13 }}>Fond :</span>
+              {Object.entries(FRAMES).map(([key, f]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFrameKey(key)}
+                  title={key === suggestedFrame ? `${f.label} (suivant dans la rotation)` : f.label}
+                  aria-pressed={currentFrame === key}
+                  style={{
+                    width: 30, height: 30, borderRadius: "50%", background: f.bg, cursor: "pointer",
+                    border: currentFrame === key ? "3px solid var(--ink, #1B2B20)" : "1px solid #CFC6B0",
+                    outline: currentFrame === key ? "2px solid #fff" : "none", outlineOffset: -5,
+                  }}
+                />
+              ))}
+              <span className="muted mono" style={{ fontSize: 11 }}>
+                {FRAMES[currentFrame].label}{currentFrame === suggestedFrame ? " · suivant dans la rotation" : ""}
+              </span>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "12px 0" }}>
               <button className="btn btn-primary" onClick={download} disabled={rendering}>
                 Télécharger PNG
