@@ -606,10 +606,11 @@ export function buildCaption(race) {
   const year = race.start_date ? String(race.start_date).slice(0, 4) : null;
   const facts = (lang) => {
     const L = lang === "en" ? tr : (v) => v;
+    const N = (n) => (n && lang === "en" ? n.replace(/ /g, ",") : n);
     const where = [
       L(race.country),
-      km && `${km} km`,
-      dplus && `${dplus} m D+`,
+      km && `${N(km)} km`,
+      dplus && `${N(dplus)} m D+`,
       race.month && [L(race.month), year].filter(Boolean).join(" "),
     ].filter(Boolean).join(" · ");
     const what = [L(race.discipline), L(race.mode)].filter(Boolean).join(" · ");
