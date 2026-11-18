@@ -41,7 +41,7 @@ const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endur
 export const FRAMES = {
   dark: { label: "Vert foncé", bg: "#1B2B20" },
   green: { label: "Vert", bg: "#15793F" },
-  rust: { label: "Rouille", bg: "#9E4A20" },
+  rust: { label: "Rouille", bg: "#C4622D" },
 };
 export const FRAME_BY_DISCIPLINE = { Route: "dark", Gravel: "green", VTT: "rust" };
 
