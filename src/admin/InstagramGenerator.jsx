@@ -36,14 +36,15 @@ const EMOJI = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-s
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 
-// Fond de la moitié basse : une couleur par pratique (Route = vert foncé,
+// Fond de la moitié basse : une couleur par pratique (Route = gris bitume,
 // Gravel = vert, VTT = rouille). Texte crème dans tous les cas.
 export const FRAMES = {
+  asphalt: { label: "Gris bitume", bg: "#3A3A35" },
   dark: { label: "Vert foncé", bg: "#1B2B20" },
   green: { label: "Vert", bg: "#15793F" },
   rust: { label: "Rouille", bg: "#C4622D" },
 };
-export const FRAME_BY_DISCIPLINE = { Route: "dark", Gravel: "green", VTT: "rust" };
+export const FRAME_BY_DISCIPLINE = { Route: "asphalt", Gravel: "green", VTT: "rust" };
 
 function normalize(str) {
   return (str || "")
