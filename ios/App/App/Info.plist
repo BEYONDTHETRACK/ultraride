@@ -15,6 +15,8 @@
 	</array>
   <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>UltraRide utilise ta position, uniquement quand l'app est ouverte, pour te montrer les ultras qui partent près de chez toi. Elle n'est ni enregistrée ni partagée.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>UltraRide utilise ta position pour te montrer les ultras qui partent près de chez toi. Elle n'est ni enregistrée ni partagée.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -64,6 +64,65 @@ export function RaceMap({ race }) {
   return <div className="v2-race-map"><div ref={ref} style={{ width: "100%", height: "100%" }} /></div>;
 }
 
+// Signalement d'un avis (règle Apple 1.2) et masquage local d'un auteur.
+const REPORT_REASONS = [
+  ["injurieux", "Injurieux ou haineux"],
+  ["faux", "Faux ou trompeur"],
+  ["spam", "Publicité ou spam"],
+  ["autre", "Autre"],
+];
+const BLOCKED_KEY = "ur-blocked-authors";
+function readBlocked() {
+  try { return JSON.parse(localStorage.getItem(BLOCKED_KEY) || "[]"); } catch { return []; }
+}
+function writeBlocked(ids) {
+  try { localStorage.setItem(BLOCKED_KEY, JSON.stringify(ids)); } catch { /* stockage indisponible */ }
+}
+
+function ReportPanel({ comment, onDone, onCancel }) {
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
+  const [block, setBlock] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const send = async (e) => {
+    e.preventDefault();
+    if (!reason) { setErr(t("Choisis un motif.")); return; }
+    setBusy(true); setErr(null);
+    const { error } = await supabase.rpc("report_comment", { p_comment_id: comment.id, p_reason: reason, p_details: details || null });
+    setBusy(false);
+    if (error) { setErr(t("Le signalement n'est pas parti. Réessaie, ou écris à hello@ultraride.eu.")); return; }
+    onDone({ block });
+  };
+
+  return (
+    <form onSubmit={send} className="report-panel" style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border, rgba(0,0,0,.12))", display: "flex", flexDirection: "column", gap: 8 }}>
+      <strong style={{ fontSize: 14 }}>{t("Signaler cet avis")}</strong>
+      <div role="radiogroup" aria-label={t("Motif du signalement")} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {REPORT_REASONS.map(([value, label]) => (
+          <label key={value} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+            <input type="radio" name={`reason-${comment.id}`} value={value} checked={reason === value} onChange={() => setReason(value)} />
+            {t(label)}
+          </label>
+        ))}
+      </div>
+      <textarea rows={2} maxLength={500} placeholder={t("Précision (facultatif)")} value={details} onChange={(e) => setDetails(e.target.value)} style={{ fontSize: 14 }} />
+      {comment.author_id && (
+        <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+          <input type="checkbox" checked={block} onChange={(e) => setBlock(e.target.checked)} />
+          {t("Ne plus voir les avis de cette personne")}
+        </label>
+      )}
+      {err && <div className="error-box">{err}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? t("Envoi…") : t("Envoyer le signalement")}</button>
+        <button className="btn" type="button" onClick={onCancel} disabled={busy}>{t("Annuler")}</button>
+      </div>
+    </form>
+  );
+}
+
 export function Comments({ raceId }) {
   const { user, isOrganizer } = useAuth();
   const [comments, setComments] = useState([]);
@@ -72,13 +131,16 @@ export function Comments({ raceId }) {
   const [info, setInfo] = useState(null);
   const { pathname, hash } = useLocation();
   const sectionRef = useRef(null);
+  const [blocked, setBlocked] = useState(readBlocked);
+  const [reporting, setReporting] = useState(null);
+  const [reported, setReported] = useState({});
   // Adresse de retour après connexion : la fiche, au niveau des avis.
   const next = encodeURIComponent(`${pathname}#avis`);
 
   const load = () => {
     supabase
       .from("comments")
-      .select("*, author:profiles(email, display_name)")
+      .select("*, author:profiles(display_name)")
       .eq("race_id", raceId)
       .eq("status", "visible")
       .order("created_at", { ascending: false })
@@ -102,18 +164,53 @@ export function Comments({ raceId }) {
     else { setBody(""); setInfo(t("Avis envoyé — il sera visible après validation par un administrateur.")); load(); }
   };
 
+  const shown = comments.filter((c) => !c.author_id || !blocked.includes(c.author_id));
+  const hiddenCount = comments.length - shown.length;
+
   return (
     <section id="avis" ref={sectionRef} style={{ display: "flex", flexDirection: "column", gap: 12, scrollMarginTop: 80 }}>
       <h2 className="v2-h3">{t("Avis des participants")}</h2>
-      {comments.length === 0 && <p className="muted">{t("Aucun avis pour l'instant.")}</p>}
+      {shown.length === 0 && <p className="muted">{t("Aucun avis pour l'instant.")}</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-        {comments.map((c) => (
+        {shown.map((c) => (
           <div key={c.id} className="card">
-            <div className="mono muted" style={{ fontSize: 11 }}>{c.author?.display_name || c.author?.email || t("Utilisateur supprimé")}</div>
+            <div className="mono muted" style={{ fontSize: 11 }}>{c.author_id ? (c.author?.display_name || t("Participant")) : t("Utilisateur supprimé")}</div>
             <p style={{ margin: "6px 0 0" }} lang="fr">{c.body}</p>
+            {user?.id !== c.author_id && (
+              reported[c.id] ? (
+                <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>{t("Merci, on regarde ce signalement sous 48 h.")}</p>
+              ) : reporting === c.id ? (
+                <ReportPanel
+                  comment={c}
+                  onCancel={() => setReporting(null)}
+                  onDone={({ block }) => {
+                    setReporting(null);
+                    setReported((r) => ({ ...r, [c.id]: true }));
+                    if (block && c.author_id) {
+                      const next = [...new Set([...blocked, c.author_id])];
+                      setBlocked(next); writeBlocked(next);
+                    }
+                  }}
+                />
+              ) : (
+                <button type="button" onClick={() => setReporting(c.id)} className="link-button"
+                  style={{ marginTop: 8, background: "none", border: 0, padding: 0, fontSize: 12, color: "var(--text2, #6b6b6b)", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start" }}>
+                  {t("Signaler")}
+                </button>
+              )
+            )}
           </div>
         ))}
       </div>
+      {hiddenCount > 0 && (
+        <p className="muted" style={{ fontSize: 13, marginTop: -12 }}>
+          {hiddenCount} avis masqué{hiddenCount > 1 ? "s" : ""} à ta demande.{" "}
+          <button type="button" onClick={() => { setBlocked([]); writeBlocked([]); }}
+            style={{ background: "none", border: 0, padding: 0, color: "inherit", textDecoration: "underline", cursor: "pointer", fontSize: 13 }}>
+            Réafficher
+          </button>
+        </p>
+      )}
 
       {error && <div className="error-box">{error}</div>}
       {info && <div className="success-box">{info}</div>}

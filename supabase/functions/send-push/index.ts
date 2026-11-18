@@ -40,6 +40,11 @@ async function authorize(req: Request, supabase: SupabaseClient): Promise<"cron"
   const cronSecret = Deno.env.get("CRON_SECRET");
   const sentSecret = req.headers.get("x-cron-secret");
   if (cronSecret && sentSecret && sentSecret === cronSecret) return "cron";
+  // Jeton de la tâche planifiée rangé dans le coffre Supabase (race_check_token).
+  if (sentSecret) {
+    const { data: ok } = await supabase.rpc("race_check_token_ok", { p_token: sentSecret });
+    if (ok === true) return "cron";
+  }
 
   const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!jwt) return null;
@@ -89,12 +94,17 @@ async function accessToken(sa: ServiceAccount): Promise<string> {
 }
 
 async function sendToTopic(sa: ServiceAccount, token: string, topic: string, title: string, body: string, url: string) {
+  return sendMessage(sa, token, { topic }, title, body, url);
+}
+
+// target : { topic } ou { condition } (plusieurs sujets sans doublon).
+async function sendMessage(sa: ServiceAccount, token: string, target: { topic?: string; condition?: string }, title: string, body: string, url: string) {
   const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       message: {
-        topic,
+        ...target,
         notification: { title, body },
         data: { url },
         android: { notification: { channel_id: "ultras", color: "#C4622D" } },
@@ -153,6 +163,34 @@ Deno.serve(async (req) => {
     sa = JSON.parse(rawSa);
   } catch {
     return json({ error: "FCM_SERVICE_ACCOUNT n'est pas un JSON valide" }, 500);
+  }
+
+  // Annonce libre : { "custom": { "topic": "all" | "nouveaux-ultras" | "mises-a-jour", "title", "body", "url": "/chemin" } }
+  // Réservée à la tâche planifiée (jeton) et aux admins, comme le reste.
+  let payload: { custom?: { topic?: string; title?: string; body?: string; url?: string } } = {};
+  try { payload = await req.json(); } catch { /* corps vide : traitement normal de la file */ }
+  if (payload?.custom) {
+    const c = payload.custom;
+    const all = Object.values(TOPIC) as string[];
+    const topic = c.topic || "all";
+    if (topic !== "all" && !all.includes(topic)) return json({ error: "Sujet inconnu" }, 400);
+    if (!c.title || !c.body || typeof c.url !== "string" || !c.url.startsWith("/")) {
+      return json({ error: "title, body et url (chemin commençant par /) sont requis" }, 400);
+    }
+    const target = topic === "all"
+      ? { condition: all.map((t) => `'${t}' in topics`).join(" || ") }
+      : { topic };
+    let sendError: string | null = null;
+    try {
+      const token = await accessToken(sa);
+      await sendMessage(sa, token, target, c.title.slice(0, 120), c.body.slice(0, 240), c.url);
+    } catch (e) {
+      sendError = e instanceof Error ? e.message : String(e);
+    }
+    await supabase.from("push_notifications").insert({
+      kind: "custom", title: c.title, body: c.body, url: `${SITE}${c.url}`, race_count: 0, error: sendError,
+    });
+    return json({ sent: [{ kind: "custom", topic, title: c.title, error: sendError }] }, sendError ? 502 : 200);
   }
 
   const { data: queue, error } = await supabase

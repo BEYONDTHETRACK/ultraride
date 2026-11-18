@@ -65,18 +65,25 @@ export async function compressImage(fileOrBlob, { maxWidth = 1600, quality = 0.8
   ctx.drawImage(source, 0, 0, width, height);
   if (typeof source.close === "function") source.close();
 
-  const webp = await toBlob(canvas, "image/webp", quality);
-  // Safari ancien : pas d'encodeur WebP, toBlob renvoie du PNG à la place.
-  if (!webp || webp.type !== "image/webp" || webp.size >= originalSize) {
+  let out = await toBlob(canvas, "image/webp", quality);
+  // Safari / app iOS : pas d'encodeur WebP, toBlob renvoie du PNG (souvent
+  // plus lourd que l'original). On retombe alors sur du JPEG, sauf pour un
+  // PNG qui peut avoir de la transparence.
+  if (!out || out.type !== "image/webp") {
+    out = fileOrBlob.type === "image/png"
+      ? await toBlob(canvas, "image/png")
+      : await toBlob(canvas, "image/jpeg", quality);
+  }
+  if (!out || out.size >= originalSize) {
     return { ...original, width: srcW, height: srcH };
   }
 
   return {
-    blob: webp,
-    contentType: "image/webp",
+    blob: out,
+    contentType: out.type,
     width,
     height,
     originalSize,
-    newSize: webp.size,
+    newSize: out.size,
   };
 }

@@ -294,8 +294,23 @@ export function useFavorite(raceId) {
 }
 
 // ── Menu secondaire (feuille) ────────────────────────────────────────
+// Version de l'app installée (réglages Xcode / Android Studio), lue une fois.
+let appVersionCache = null;
+function useAppVersion() {
+  const [v, setV] = useState(appVersionCache);
+  useEffect(() => {
+    if (!isNative || appVersionCache) return;
+    import("@capacitor/app")
+      .then(({ App }) => App.getInfo())
+      .then((info) => { appVersionCache = `version ${info.version} (build ${info.build})`; setV(appVersionCache); })
+      .catch(() => {});
+  }, []);
+  return v;
+}
+
 export function MenuButton({ variant = "light" }) {
   const [open, setOpen] = useState(false);
+  const appVersion = useAppVersion();
   const { user, isAdmin, isOrganizer, signOut } = useAuth();
   const close = () => setOpen(false);
 
@@ -344,6 +359,7 @@ export function MenuButton({ variant = "light" }) {
                 </>
               )}
             </div>
+            {appVersion && <p className="m-sheet-version">UltraRide · {appVersion}</p>}
           </div>
         </div>,
         document.body

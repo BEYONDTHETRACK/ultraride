@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useNavigationType, useSearchParams } from "react-router-dom";
 import { useRaces, chronoRank, groupLabel, matchesSearch, MONTHS } from "./data";
 import { RaceRow, MenuButton, Icon, disciplineBg, formatLabel, useFavoriteSet } from "./ui";
 import { t, tn } from "../lib/i18n";
@@ -17,17 +17,28 @@ export default function MobileList() {
   // Le texte n'est recopié dans l'URL qu'en quittant le champ (ou sur « Rechercher ») :
   // sur iOS, modifier l'URL à chaque frappe fait perdre le focus après la 1re lettre.
   const [urlQ, setUrlQ] = useState(q);
-  const [filters, setFilters] = useState({ ...EMPTY, d: params.get("d") || "" });
+  // Tous les filtres vivent dans l'URL : retour depuis une fiche = même liste.
+  const [filters, setFilters] = useState(() =>
+    Object.fromEntries(Object.keys(EMPTY).map((k) => [k, params.get(k) || ""]))
+  );
   const [sheet, setSheet] = useState(false);
-  const [showPast, setShowPast] = useState(false);
+  const [showPast, setShowPast] = useState(params.get("past") === "1");
 
   // La recherche reste dans l'URL : retour arrière depuis une fiche = même liste.
   useEffect(() => {
     const next = {};
     if (urlQ) next.q = urlQ;
-    if (filters.d) next.d = filters.d;
+    Object.keys(EMPTY).forEach((k) => { if (filters[k]) next[k] = filters[k]; });
+    if (showPast) next.past = "1";
     setParams(next, { replace: true });
-  }, [urlQ, filters.d]);
+  }, [urlQ, filters, showPast]);
+
+  // Position de défilement : mémorisée en quittant la liste, restaurée au retour.
+  const navType = useNavigationType();
+  const restored = useRef(false);
+  useEffect(() => () => {
+    try { sessionStorage.setItem("ur-list-scroll", String(window.scrollY)); } catch {}
+  }, []);
 
   const countries = useMemo(
     () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort((a, b) => t(a).localeCompare(t(b))) : []),
@@ -60,6 +71,14 @@ export default function MobileList() {
     });
     return out;
   }, [results, showPast]);
+
+  useLayoutEffect(() => {
+    if (restored.current || !races) return;
+    restored.current = true;
+    let y = 0;
+    try { y = Number(sessionStorage.getItem("ur-list-scroll")) || 0; sessionStorage.removeItem("ur-list-scroll"); } catch {}
+    if (y && navType === "POP") window.scrollTo(0, y);
+  }, [races, groups]);
 
   const pastCount = useMemo(() => results.filter((r) => groupLabel(r) === t("Éditions passées")).length, [results]);
   const activeCount = Object.keys(EMPTY).filter((k) => k !== "d" && filters[k]).length;

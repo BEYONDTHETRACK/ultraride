@@ -9,13 +9,16 @@ export default function CommentsModeration() {
   const load = async () => {
     const { data, error } = await supabase
       .from("comments")
-      .select("*, race:races(name), author:profiles(email, display_name)")
+      .select("*, race:races(name), author:profiles(email, display_name), reports:comment_reports(id, reason, details, created_at, resolved_at)")
       // pending first, then deletion requests, then recent
       .order("created_at", { ascending: false });
     if (error) setError(error.message);
     else {
       // sort: pending → deletion_requested → rest
+      const openReports = (c) => (c.reports || []).filter((r) => !r.resolved_at).length;
       const sorted = [...(data || [])].sort((a, b) => {
+        if (openReports(a) && !openReports(b)) return -1;
+        if (openReports(b) && !openReports(a)) return 1;
         if (a.status === "pending" && b.status !== "pending") return -1;
         if (b.status === "pending" && a.status !== "pending") return 1;
         if (a.deletion_requested && !b.deletion_requested) return -1;
@@ -28,8 +31,15 @@ export default function CommentsModeration() {
 
   useEffect(() => { load(); }, []);
 
+  // Toute décision de l'admin clôt les signalements en cours sur l'avis.
+  const resolveReports = (c) => {
+    if (!(c.reports || []).some((r) => !r.resolved_at)) return Promise.resolve();
+    return supabase.from("comment_reports").update({ resolved_at: new Date().toISOString() }).eq("comment_id", c.id).is("resolved_at", null);
+  };
+
   const approve = async (c) => {
     setBusyId(c.id);
+    await resolveReports(c);
     const { error } = await supabase.from("comments").update({ status: "visible" }).eq("id", c.id);
     setBusyId(null);
     if (error) setError(error.message);
@@ -38,6 +48,7 @@ export default function CommentsModeration() {
 
   const toggleVisibility = async (c) => {
     setBusyId(c.id);
+    await resolveReports(c);
     const { error } = await supabase
       .from("comments")
       .update({ status: c.status === "visible" ? "hidden" : "visible" })
@@ -64,6 +75,8 @@ export default function CommentsModeration() {
     else load();
   };
 
+  const REASON = { injurieux: "Injurieux ou haineux", faux: "Faux ou trompeur", spam: "Publicité ou spam", autre: "Autre" };
+  const reportedCount = comments?.filter((c) => (c.reports || []).some((r) => !r.resolved_at)).length || 0;
   const pendingCount = comments?.filter((c) => c.status === "pending").length || 0;
   const deletionCount = comments?.filter((c) => c.deletion_requested).length || 0;
 
@@ -71,6 +84,9 @@ export default function CommentsModeration() {
     <div>
       <h1 className="h1">Commentaires</h1>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {reportedCount > 0 && (
+          <span className="badge badge-rejected">{reportedCount} avis signalé{reportedCount > 1 ? "s" : ""}</span>
+        )}
         {pendingCount > 0 && (
           <span className="badge badge-pending">{pendingCount} en attente de validation</span>
         )}
@@ -117,6 +133,17 @@ export default function CommentsModeration() {
                 </div>
               </div>
               <p style={{ marginTop: 8, marginBottom: 0 }}>{c.body}</p>
+              {(c.reports || []).filter((r) => !r.resolved_at).length > 0 && (
+                <div className="error-box" style={{ marginTop: 10, marginBottom: 0 }}>
+                  <strong>Signalé {(c.reports || []).filter((r) => !r.resolved_at).length} fois</strong>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {(c.reports || []).filter((r) => !r.resolved_at).map((r) => (
+                      <li key={r.id}>{REASON[r.reason] || r.reason}{r.details ? ` : « ${r.details} »` : ""} · {new Date(r.created_at).toLocaleDateString("fr-FR")}</li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: 6, fontSize: 12 }}>Approuver, masquer ou ré-afficher clôt ces signalements.</div>
+                </div>
+              )}
             </div>
           ))}
         </div>
