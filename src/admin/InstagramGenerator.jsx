@@ -233,6 +233,30 @@ function drawImageContain(ctx, img, x, y, w, h) {
   ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
 }
 
+// Vrai si les pixels visibles de l'image sont surtout clairs (logo blanc sur
+// fond transparent, par ex.) : on la pose alors sur un fond sombre.
+function isLightImage(img) {
+  try {
+    const c = document.createElement("canvas");
+    c.width = 48;
+    c.height = 48;
+    const x = c.getContext("2d");
+    x.drawImage(img, 0, 0, 48, 48);
+    const d = x.getImageData(0, 0, 48, 48).data;
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
+      sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      n += 1;
+    }
+    // Image presque entièrement transparente ou majoritairement claire.
+    return n > 0 && sum / n > 200 && n < 48 * 48 * 0.9;
+  } catch {
+    return false;
+  }
+}
+
 function drawImageCover(ctx, img, x, y, w, h) {
   const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
   const sw = w / scale;
@@ -339,7 +363,7 @@ export async function renderRacecard(canvas, race, frameKey = "dark") {
 
   // --- Visuel : la moitié haute de la carte, image entière ---
   const VIS_H = H / 2 + 5; // 680 px
-  ctx.fillStyle = COLORS.imageBg;
+  ctx.fillStyle = image && isLightImage(image) ? COLORS.ink : COLORS.imageBg;
   ctx.fillRect(0, 0, W, VIS_H);
   if (image) {
     ctx.save();
@@ -386,7 +410,7 @@ export async function renderRacecard(canvas, race, frameKey = "dark") {
   if (logo) {
     ctx.save();
     roundRect(ctx, x0, y, LOGO, LOGO, 16);
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = isLightImage(logo) ? "#0A0A0A" : "#FFFFFF";
     ctx.fill();
     ctx.clip();
     drawImageCover(ctx, logo, x0, y, LOGO, LOGO);
@@ -574,7 +598,7 @@ export async function renderRacecard(canvas, race, frameKey = "dark") {
 
 /* ---------- légende ---------- */
 
-function buildCaption(race) {
+export function buildCaption(race) {
   const handle = toInstagramHandle(race.organizer?.instagram);
   const tr = (v) => (v ? EN[v] || v : v);
   const km = formatThousands(race.km);
