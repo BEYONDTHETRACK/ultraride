@@ -18,7 +18,7 @@ export default function MobileTabBar() {
   const { user } = useAuth();
   const { pathname } = useLocation();
 
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/admin") || pathname === "/liens") return null;
 
   const passportPath = user ? "/account" : "/login";
   const onPassport = pathname === "/account" || pathname === "/login";
