@@ -23,7 +23,7 @@ const EMPTY = {
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   start_date: "", end_date: "", registration_url: "",
-  organizer_name: "", blurb: "", long_blurb: "",
+  organizer_name: "", blurb: "", blurb_en: "", long_blurb: "",
   event_name: "",
   status: "published", organizer_id: "", image_url: "",
   edition: "",
@@ -44,7 +44,7 @@ const ALLOWED_COLUMNS = [
   "name","country","discipline","format","mode","parcours","month","km","dplus","open",
   "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
   "start_place","end_place","departure_time","start_date","end_date",
-  "organizer_name","organizer_id","terrain","next_edition","blurb","long_blurb",
+  "organizer_name","organizer_id","terrain","next_edition","blurb","blurb_en","long_blurb",
   "status","image_url","registration_url","event_name","event_slug","price","edition"
 ];
 
@@ -602,6 +602,13 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <textarea required rows={2} value={form.blurb || ""} onChange={(e) => field("blurb", e.target.value)}
           placeholder="Une phrase qui donne envie : le terrain, l'ambiance, ce qui rend l'épreuve unique." />
         <div className={`field-hint${(form.blurb || "").length > 220 ? " rf-over" : ""}`}>{(form.blurb || "").length} / 220 caractères conseillés{(form.blurb || "").length > 220 ? " : le texte sera coupé sur les cartes" : ""}</div>
+      </div>
+
+      <div className="field">
+        <label>Description courte en anglais</label>
+        <textarea rows={2} value={form.blurb_en || ""} onChange={(e) => field("blurb_en", e.target.value)}
+          placeholder="Short description in English, used on the bilingual Instagram cards." />
+        <div className={`field-hint${(form.blurb_en || "").length > 120 ? " rf-over" : ""}`}>{(form.blurb_en || "").length} / 120 caractères conseillés pour la vignette Instagram</div>
       </div>
 
       <div className="field">
