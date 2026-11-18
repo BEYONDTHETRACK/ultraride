@@ -45,9 +45,9 @@ export default function Links() {
 
   useEffect(() => {
     document.title = "UltraRide — liens";
-    // Fond vert jusqu'en bas de l'écran (le body du site est parchemin).
+    // Fond parchemin jusqu'en bas de l'écran.
     const prev = document.body.style.background;
-    document.body.style.background = "#1B2B20";
+    document.body.style.background = "#F5F1E6";
     return () => { document.body.style.background = prev; };
   }, []);
 
@@ -153,28 +153,28 @@ export default function Links() {
 }
 
 const CSS = `
-.lk{min-height:100dvh;background:#1B2B20;color:#F5F1E6;font-family:'IBM Plex Sans',sans-serif;padding:36px 16px 48px;box-sizing:border-box}
+.lk{min-height:100dvh;background:#F5F1E6;color:#1B2B20;font-family:'IBM Plex Sans',sans-serif;padding:36px 16px 48px;box-sizing:border-box}
 .lk *{box-sizing:border-box}
 .lk-wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
 .lk-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
-.lk-logo{width:76px;height:76px;border-radius:20px;background:#0B0B0B;display:flex;align-items:center;justify-content:center;font-family:Anton,sans-serif;font-size:44px;line-height:1;box-shadow:0 10px 24px rgba(0,0,0,.35);margin-bottom:6px}
+.lk-logo{width:76px;height:76px;border-radius:20px;background:#0B0B0B;display:flex;align-items:center;justify-content:center;font-family:Anton,sans-serif;font-size:44px;line-height:1;box-shadow:0 10px 24px rgba(27,43,32,.25);margin-bottom:6px}
 .lk-logo .u{color:#E8732F}.lk-logo .r{color:#23A85C}
-.lk-head h1{font-family:Anton,sans-serif;font-weight:400;font-size:40px;text-transform:uppercase;margin:0;letter-spacing:.01em}
-.lk-head h1 em{font-style:normal;color:#E8925A}
-.lk-head p{margin:0;color:#BDB6A6;font-size:15px}
+.lk-head h1{font-family:Anton,sans-serif;font-weight:400;font-size:40px;text-transform:uppercase;margin:0;letter-spacing:.01em;color:#1B2B20}
+.lk-head h1 em{font-style:normal;color:#C4622D}
+.lk-head p{margin:0;color:#5E6A5F;font-size:15px}
 .lk-kicker{display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#E8925A;margin-bottom:10px}
-.lk-app{background:#24382B;border-radius:18px;padding:16px}
+.lk-app{background:#1B2B20;border-radius:18px;padding:16px}
 .lk-stores{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .lk-stores a{display:block;background:#0B0B0B;color:#F5F1E6;text-decoration:none;border:1px solid #3A4D40;border-radius:12px;padding:10px 12px;font-weight:600;font-size:17px;line-height:1.15}
 .lk-stores a small{display:block;font-weight:400;font-size:11px;opacity:.75}
 .lk-stores a:hover{border-color:#E8925A}
 .lk-list{display:flex;flex-direction:column;gap:10px}
-.lk-list a{position:relative;display:block;background:#F5F1E6;color:#1B2B20;text-decoration:none;border-radius:14px;padding:14px 46px 14px 16px;transition:transform .12s}
+.lk-list a{position:relative;display:block;background:#1B2B20;color:#F5F1E6;text-decoration:none;border-radius:14px;padding:14px 46px 14px 16px;transition:transform .12s;box-shadow:0 6px 16px rgba(27,43,32,.12)}
 .lk-list a:hover{transform:translateY(-1px)}
 .lk-list a b{display:block;font-family:Anton,sans-serif;font-weight:400;font-size:21px;text-transform:uppercase;letter-spacing:.01em}
-.lk-list a span{display:block;color:#5E6A5F;font-size:14px;margin-top:2px}
-.lk-list a i{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-style:normal;font-size:22px;color:#C4622D}
-.lk-news{background:#24382B;border-radius:18px;padding:16px}
+.lk-list a span{display:block;color:#BDB6A6;font-size:14px;margin-top:2px}
+.lk-list a i{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-style:normal;font-size:22px;color:#E8925A}
+.lk-news{background:#1B2B20;border-radius:18px;padding:16px}
 .lk-news p{margin:0 0 12px;color:#CFC8B8;font-size:15px}
 .lk-row{display:flex;gap:8px}
 .lk-row input{flex:1;min-width:0;font:inherit;font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid #3A4D40;background:#F5F1E6;color:#1B2B20}
@@ -185,7 +185,7 @@ const CSS = `
 .lk-consent a{color:#E8925A}
 .lk-msg{margin:10px 0 0 !important;font-size:14px}
 .lk-msg.ok{color:#7DD39C !important}.lk-msg.ko{color:#F09A8A !important}
-.lk-foot{display:flex;justify-content:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8E978C}
-.lk-foot a{color:#BDB6A6;text-decoration:none}
-.lk :focus-visible{outline:2px solid #E8925A;outline-offset:2px}
+.lk-foot{display:flex;justify-content:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A8F80}
+.lk-foot a{color:#5E6A5F;text-decoration:none}
+.lk :focus-visible{outline:2px solid #C4622D;outline-offset:2px}
 `;
