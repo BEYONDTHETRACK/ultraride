@@ -2,10 +2,11 @@ import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { compressImage, formatBytes } from "../lib/compressImage";
+import { t } from "../lib/i18n";
 
 // Le SVG peut embarquer du script : seul l'admin peut en téléverser.
 const BASE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-const FORMAT_ERROR = "Format non autorisé : PNG, JPEG, WebP ou GIF uniquement.";
+const FORMAT_ERROR_FR = "Format non autorisé : PNG, JPEG, WebP ou GIF uniquement.";
 
 // Les logos s'affichent en petit : 600 px de large suffisent largement.
 const MAX_WIDTH_BY_FOLDER = { organizers: 600 };
@@ -31,7 +32,7 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
 
     // `accept` n'est qu'une suggestion au sélecteur de fichiers.
     if (!allowedTypes.includes(file.type)) {
-      setError(FORMAT_ERROR);
+      setError(t(FORMAT_ERROR_FR));
       e.target.value = "";
       return;
     }
@@ -55,7 +56,7 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
     if (uploadError) {
       const rejectedFormat =
         String(uploadError.statusCode) === "415" || /mime|type/i.test(uploadError.message || "");
-      setError(rejectedFormat ? FORMAT_ERROR : uploadError.message);
+      setError(rejectedFormat ? t(FORMAT_ERROR_FR) : uploadError.message);
       e.target.value = "";
       setUploading(false);
       return;
@@ -79,10 +80,10 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
         <input
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="https://... (ou choisis un fichier)"
+          placeholder={t("https://... (ou choisis un fichier)")}
         />
         <label className="btn image-upload-btn">
-          {uploading ? "Envoi…" : "Choisir un fichier"}
+          {uploading ? t("Envoi…") : t("Choisir un fichier")}
           <input type="file" accept={allowedTypes.join(",")} onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
         </label>
       </div>

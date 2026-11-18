@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getPosition, geoAlreadyGranted } from "../lib/geo";
+import { t, locale } from "../lib/i18n";
 
 // Liste des ultras publiés, chargée une seule fois et partagée entre les
 // onglets Découvrir / Ultras / Carte : passer d'un onglet à l'autre est
@@ -76,15 +77,15 @@ export function isUpcoming(race) {
 
 export function formatDate(race, { short = false } = {}) {
   const d = parseDate(race.start_date);
-  if (!d) return race.month ? `${race.month}${short ? "" : " (date à confirmer)"}` : "Date à confirmer";
-  return d.toLocaleDateString("fr-FR", short ? { day: "numeric", month: "short" } : { day: "numeric", month: "long", year: "numeric" });
+  if (!d) return race.month ? `${t(race.month)}${short ? "" : t(" (date à confirmer)")}` : t("Date à confirmer");
+  return d.toLocaleDateString(locale(), short ? { day: "numeric", month: "short" } : { day: "numeric", month: "long", year: "numeric" });
 }
 
 export function dateTile(race) {
   const d = parseDate(race.start_date);
-  if (d) return { big: String(d.getDate()), small: MONTHS_SHORT[d.getMonth()] };
+  if (d) return { big: String(d.getDate()), small: t(MONTHS_SHORT[d.getMonth()]) };
   const i = MONTHS.indexOf(race.month);
-  return { big: "—", small: i >= 0 ? MONTHS_SHORT[i] : "À VENIR" };
+  return { big: "—", small: t(i >= 0 ? MONTHS_SHORT[i] : "À VENIR") };
 }
 
 // Ordre chronologique : les départs à venir d'abord (par date), puis les
@@ -102,13 +103,13 @@ export function chronoRank(race) {
 
 export function groupLabel(race) {
   const d = parseDate(race.start_date);
-  if (d && d >= startOfToday()) return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-  if (!d) return "Date à confirmer";
-  return "Éditions passées";
+  if (d && d >= startOfToday()) return `${t(MONTHS[d.getMonth()])} ${d.getFullYear()}`;
+  if (!d) return t("Date à confirmer");
+  return t("Éditions passées");
 }
 
 export function formatNumber(n) {
-  return n == null ? null : Math.round(Number(n)).toLocaleString("fr-FR");
+  return n == null ? null : Math.round(Number(n)).toLocaleString(locale());
 }
 
 export function haversineKm(lat1, lon1, lat2, lon2) {
@@ -129,7 +130,7 @@ export function startCoords(race) {
 export function matchesSearch(race, q) {
   if (!q) return true;
   const hay = normalize([
-    race.name, race.country, race.discipline, race.format, race.mode, race.month,
+    race.name, race.country, t(race.country), race.discipline, t(race.discipline), race.format, race.mode, race.month,
     race.start_place, race.end_place, race.blurb, race.organizer?.name,
   ].filter(Boolean).join(" "));
   return hay.includes(normalize(q));

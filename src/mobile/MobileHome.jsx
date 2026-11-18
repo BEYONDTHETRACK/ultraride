@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { NotificationInvite } from "./NotificationSettings";
 import { useRaces, useGeo, isUpcoming, chronoRank, daysUntil, haversineKm, startCoords } from "./data";
 import { Cover, Pill, Stamp, Stat, raceStats, MiniCard, MenuButton, Icon, disciplineBg } from "./ui";
+import { t } from "../lib/i18n";
 
 const DISCIPLINES = ["Route", "Gravel", "VTT"];
 const NEARBY_RADIUS_KM = 400;
@@ -25,10 +26,10 @@ function Featured({ race }) {
     <Link to={`/courses/${race.id}`} className="m-feature">
       <Cover race={race} height={190}>
         <div className="m-cover-tags">
-          <Pill>{(race.discipline || "Ultra").toUpperCase()}</Pill>
-          {race.country && <Pill tone="glass">{race.country.toUpperCase()}</Pill>}
+          <Pill>{t(race.discipline || "Ultra").toUpperCase()}</Pill>
+          {race.country && <Pill tone="glass">{t(race.country).toUpperCase()}</Pill>}
         </div>
-        {j != null && <span className="m-cover-stamp"><Stamp top="DÉPART" big={`J-${j}`} /></span>}
+        {j != null && <span className="m-cover-stamp"><Stamp top={t("DÉPART")} big={t("J-{n}", { n: j })} /></span>}
         <div className="m-cover-title">{race.name}</div>
       </Cover>
       <div className="m-stats3">
@@ -82,31 +83,31 @@ export default function MobileHome() {
 
         <div className="m-hero">
           <div className="m-label m-label--green">
-            {races ? `${races.length} ULTRAS · ${countries} PAYS` : "RÉPERTOIRE ULTRA-DISTANCE"}
+            {races ? t("{n} ULTRAS · {c} PAYS", { n: races.length, c: countries }) : t("RÉPERTOIRE ULTRA-DISTANCE")}
           </div>
-          <h1 className="m-h1">TROUVE TON<br />PROCHAIN ULTRA</h1>
+          <h1 className="m-h1">{t("TROUVE TON")}<br />{t("PROCHAIN ULTRA")}</h1>
         </div>
 
         <Link to="/ultras" className="m-searchpill">
           <Icon name="search" />
-          <span>Nom, pays, organisateur…</span>
+          <span>{t("Nom, pays, organisateur…")}</span>
           <span className="m-searchpill-btn"><Icon name="sliders" size={18} /></span>
         </Link>
 
         <div className="m-chips">
-          <Link to="/ultras" className="m-chip m-chip--on">Tous</Link>
+          <Link to="/ultras" className="m-chip m-chip--on">{t("Tous")}</Link>
           {DISCIPLINES.map((d) => (
             <Link key={d} to={`/ultras?d=${encodeURIComponent(d)}`} className="m-chip">
-              <span className="m-chip-dot" style={{ background: disciplineBg(d) }} />{d}
+              <span className="m-chip-dot" style={{ background: disciplineBg(d) }} />{t(d)}
             </Link>
           ))}
         </div>
 
-        {error && <div className="m-error">Impossible de charger les ultras ({error}).</div>}
+        {error && <div className="m-error">{t("Impossible de charger les ultras ({e}).", { e: error })}</div>}
         {!races && !error && <div className="m-skeleton" style={{ height: 260 }} />}
 
         {featured && (
-          <Section title="À LA UNE" action={<Link to="/ultras" className="m-link">Tout voir</Link>}>
+          <Section title={t("À LA UNE")} action={<Link to="/ultras" className="m-link">{t("Tout voir")}</Link>}>
             <Featured race={featured} />
           </Section>
         )}
@@ -114,24 +115,24 @@ export default function MobileHome() {
         <NotificationInvite />
 
         {races && (
-          <Section title="PRÈS DE TOI" action={<Link to="/carte" className="m-link">Carte</Link>}>
+          <Section title={t("PRÈS DE TOI")} action={<Link to="/carte" className="m-link">{t("Carte")}</Link>}>
             {geo.status === "granted" && nearby.length > 0 ? (
               <div className="m-hscroll">
                 {nearby.map(({ race, km }) => (
-                  <MiniCard key={race.id} race={race} extra={`à ${Math.round(km)} km`} />
+                  <MiniCard key={race.id} race={race} extra={t("à {n} km", { n: Math.round(km) })} />
                 ))}
               </div>
             ) : (
               <div className="m-card m-geo">
-                {geo.status === "loading" && <p>Localisation en cours…</p>}
-                {geo.status === "granted" && <p>Aucun départ référencé à moins de {NEARBY_RADIUS_KM} km.</p>}
-                {geo.status === "denied" && <p>Localisation refusée : autorise-la dans les réglages pour voir les ultras proches.</p>}
-                {geo.status === "unsupported" && <p>Ton appareil ne permet pas la géolocalisation.</p>}
+                {geo.status === "loading" && <p>{t("Localisation en cours…")}</p>}
+                {geo.status === "granted" && <p>{t("Aucun départ référencé à moins de {n} km.", { n: NEARBY_RADIUS_KM })}</p>}
+                {geo.status === "denied" && <p>{t("Localisation refusée : autorise-la dans les réglages pour voir les ultras proches.")}</p>}
+                {geo.status === "unsupported" && <p>{t("Ton appareil ne permet pas la géolocalisation.")}</p>}
                 {geo.status === "idle" && (
                   <>
-                    <p>Active la localisation pour voir les départs autour de toi. Ta position reste sur ton téléphone.</p>
+                    <p>{t("Active la localisation pour voir les départs autour de toi. Ta position reste sur ton téléphone.")}</p>
                     <button type="button" className="m-btn m-btn--dark" onClick={geo.request}>
-                      <Icon name="locate" size={16} /> Me localiser
+                      <Icon name="locate" size={16} /> {t("Me localiser")}
                     </button>
                   </>
                 )}
@@ -141,7 +142,7 @@ export default function MobileHome() {
         )}
 
         {nextDepartures.length > 0 && (
-          <Section title="PROCHAINS DÉPARTS" action={<Link to="/ultras" className="m-link">Tout voir</Link>}>
+          <Section title={t("PROCHAINS DÉPARTS")} action={<Link to="/ultras" className="m-link">{t("Tout voir")}</Link>}>
             <div className="m-hscroll">
               {nextDepartures.map((r) => <MiniCard key={r.id} race={r} />)}
             </div>
@@ -149,7 +150,7 @@ export default function MobileHome() {
         )}
 
         {races && (
-          <Link to="/ultras" className="m-btn m-btn--primary m-btn--block">Voir les {races.length} ultras</Link>
+          <Link to="/ultras" className="m-btn m-btn--primary m-btn--block">{t("Voir les {n} ultras", { n: races.length })}</Link>
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 import { getEnabledProviders, rememberAfterLogin, authErrorFr } from "../lib/authProviders";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
+import { t } from "../lib/i18n";
 
 const PERKS = [
   ["Tes favoris et leurs dates", "Garde tes ultras en vue et retrouve leurs dates en un coup d'œil."],
@@ -22,7 +23,7 @@ function passwordScore(pw) {
   if (!pw) return 0;
   return [pw.length >= PASSWORD_MIN_LENGTH, /[a-z]/.test(pw), /[A-Z]/.test(pw), /\d/.test(pw)].filter(Boolean).length;
 }
-const SCORE_LABEL = ["", "Faible", "Faible", "Moyen", "Solide"];
+const SCORE_LABEL = ["", "Faible", "Faible", "Moyen", "Solide"]; // traduit à l'affichage
 
 export function CheckIcon() {
   return (
@@ -112,8 +113,8 @@ export default function Login() {
 
   const signinErrorMessage = (err) => {
     const msg = err?.message || "";
-    if (err?.code === "invalid_credentials" || /Invalid login credentials/i.test(msg)) return "Email ou mot de passe incorrect.";
-    if (err?.code === "email_not_confirmed" || /Email not confirmed/i.test(msg)) return "Ton adresse n'est pas encore confirmée : clique sur le lien reçu par email.";
+    if (err?.code === "invalid_credentials" || /Invalid login credentials/i.test(msg)) return t("Email ou mot de passe incorrect.");
+    if (err?.code === "email_not_confirmed" || /Email not confirmed/i.test(msg)) return t("Ton adresse n'est pas encore confirmée : clique sur le lien reçu par email.");
     return msg;
   };
 
@@ -123,8 +124,8 @@ export default function Login() {
 
   useEffect(() => {
     if (resendIn <= 0) return undefined;
-    const t = setTimeout(() => setResendIn((n) => n - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendIn]);
 
   const switchMode = (m) => {
@@ -146,7 +147,7 @@ export default function Login() {
     setError(null);
     setInfo(null);
     if (mode === "signup" && !termsAccepted) {
-      setError("Merci d'accepter les CGU, la politique de confidentialité et les règles pour créer un compte.");
+      setError(t("Merci d'accepter les CGU, la politique de confidentialité et les règles pour créer un compte."));
       return;
     }
     setLoading(true);
@@ -160,7 +161,7 @@ export default function Login() {
     setLoading(false);
     if (error) {
       const fr = authErrorFr(error);
-      setError(fr === "NO_ACCOUNT" ? "NO_ACCOUNT" : fr);
+      setError(fr === "NO_ACCOUNT" ? "NO_ACCOUNT" : t(fr));
       return;
     }
     setCode("");
@@ -177,7 +178,7 @@ export default function Login() {
     const { error } = await verifyEmailCode(codeSentTo, token);
     setLoading(false);
     if (error) {
-      setError(authErrorFr(error));
+      setError(t(authErrorFr(error)));
       setCode("");
     }
   };
@@ -198,7 +199,7 @@ export default function Login() {
       const { error } = await sendPasswordReset(email);
       setLoading(false);
       if (error) setError(error.message);
-      else setInfo("Si un compte existe avec cet email, un lien de réinitialisation vient d'être envoyé.");
+      else setInfo(t("Si un compte existe avec cet email, un lien de réinitialisation vient d'être envoyé."));
       return;
     }
 
@@ -208,7 +209,7 @@ export default function Login() {
     }
 
     if (mode === "signup" && !termsAccepted) {
-      setError("Merci d'accepter les CGU, la politique de confidentialité et les règles pour créer un compte.");
+      setError(t("Merci d'accepter les CGU, la politique de confidentialité et les règles pour créer un compte."));
       return;
     }
 
@@ -230,11 +231,11 @@ export default function Login() {
     if (result.alreadyExists) {
       setMode("signin");
       setPassword("");
-      setError("Un compte existe déjà avec cet email. Connecte-toi, ou utilise « Mot de passe oublié » si tu ne t'en souviens plus.");
+      setError(t("Un compte existe déjà avec cet email. Connecte-toi, ou utilise « Mot de passe oublié » si tu ne t'en souviens plus."));
       return;
     }
     if (mode === "signup") {
-      setInfo("Compte créé — vérifie ta boîte mail pour confirmer ton adresse avant de te connecter.");
+      setInfo(t("Compte créé — vérifie ta boîte mail pour confirmer ton adresse avant de te connecter."));
       setPassword("");
     }
   };
@@ -247,8 +248,8 @@ export default function Login() {
     }
     return (
       <main className="v2-wrap auth-done">
-        <p>Tu es connecté avec <strong>{user.email}</strong>.</p>
-        <Link to="/account" className="v2-btn v2-btn-rust">Mon passeport</Link>
+        <p>{t("Tu es connecté avec")} <strong>{user.email}</strong>.</p>
+        <Link to="/account" className="v2-btn v2-btn-rust">{t("Mon passeport")}</Link>
       </main>
     );
   }
@@ -265,44 +266,44 @@ export default function Login() {
             ))}
           </svg>
           <div className="auth-aside-head">
-            <span className="auth-eyebrow">TON PASSEPORT ULTRA</span>
-            <h1 className="auth-title">SUIS TES ULTRAS.<br />TIENS TON PALMARÈS.</h1>
+            <span className="auth-eyebrow">{t("TON PASSEPORT ULTRA")}</span>
+            <h1 className="auth-title">{t("SUIS TES ULTRAS.")}<br />{t("TIENS TON PALMARÈS.")}</h1>
           </div>
           <ul className="auth-perks">
             {PERKS.map(([title, text]) => (
               <li key={title}>
                 <span className="auth-perk-ico"><CheckIcon /></span>
                 <div>
-                  <div className="auth-perk-title">{title}</div>
-                  <div className="auth-perk-text">{text}</div>
+                  <div className="auth-perk-title">{t(title)}</div>
+                  <div className="auth-perk-text">{t(text)}</div>
                 </div>
               </li>
             ))}
           </ul>
           <div className="auth-stats">
-            <span><b>{stats ? stats.ultras : "—"}</b>ULTRAS</span>
-            <span><b>{stats ? stats.countries : "—"}</b>PAYS</span>
-            <span><b>0 €</b>POUR TOUS</span>
+            <span><b>{stats ? stats.ultras : "—"}</b>{t("ULTRAS")}</span>
+            <span><b>{stats ? stats.countries : "—"}</b>{t("PAYS")}</span>
+            <span><b>{t("0 €")}</b>{t("POUR TOUS")}</span>
           </div>
         </section>
 
         <section className="auth-main">
           {mode === "forgot" ? (
             <div className="auth-forgot-head">
-              <h2 className="auth-h2">Mot de passe oublié</h2>
-              <p>Saisis l'adresse de ton compte : on t'envoie un lien pour en choisir un nouveau.</p>
+              <h2 className="auth-h2">{t("Mot de passe oublié")}</h2>
+              <p>{t("Saisis l'adresse de ton compte : on t'envoie un lien pour en choisir un nouveau.")}</p>
             </div>
           ) : (
             <div role="tablist" className="auth-tabs">
-              <button type="button" role="tab" aria-selected={mode === "signin"} onClick={() => switchMode("signin")}>Connexion</button>
-              <button type="button" role="tab" aria-selected={mode === "signup"} onClick={() => switchMode("signup")}>Créer un compte</button>
+              <button type="button" role="tab" aria-selected={mode === "signin"} onClick={() => switchMode("signin")}>{t("Connexion")}</button>
+              <button type="button" role="tab" aria-selected={mode === "signup"} onClick={() => switchMode("signup")}>{t("Créer un compte")}</button>
             </div>
           )}
 
           {error === "NO_ACCOUNT" ? (
             <div className="error-box" role="alert">
-              Aucun compte avec cet email.{" "}
-              <button type="button" className="auth-textlink" onClick={() => switchMode("signup")}>Créer un compte</button>
+              {t("Aucun compte avec cet email.")}{" "}
+              <button type="button" className="auth-textlink" onClick={() => switchMode("signup")}>{t("Créer un compte")}</button>
             </div>
           ) : (
             error && <div className="error-box" role="alert">{error}</div>
@@ -312,7 +313,7 @@ export default function Login() {
           {codeSentTo ? (
             <div className="auth-form">
               <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-code">Saisis le code reçu à <strong>{codeSentTo}</strong></label>
+                <label className="auth-label" htmlFor="auth-code">{t("Saisis le code reçu à")} <strong>{codeSentTo}</strong></label>
                 <input
                   id="auth-code"
                   className="auth-input auth-code"
@@ -327,17 +328,17 @@ export default function Login() {
                   placeholder={"•".repeat(OTP_LENGTH)}
                   disabled={loading}
                 />
-                <span className="auth-hint">Le code est valable une heure. Pense à regarder dans tes spams.</span>
+                <span className="auth-hint">{t("Le code est valable une heure. Pense à regarder dans tes spams.")}</span>
               </div>
               <button className="v2-btn v2-btn-rust auth-submit" type="button" disabled={loading || code.length < OTP_LENGTH} onClick={() => submitCode()}>
-                {loading ? "…" : "Valider le code"}
+                {loading ? "…" : t("Valider le code")}
               </button>
               <p className="auth-foot auth-code-actions">
                 <button type="button" className="auth-textlink" disabled={resendIn > 0 || loading} onClick={requestCode}>
-                  {resendIn > 0 ? `Renvoyer le code (${resendIn} s)` : "Renvoyer le code"}
+                  {resendIn > 0 ? t("Renvoyer le code ({n} s)", { n: resendIn }) : t("Renvoyer le code")}
                 </button>
                 <button type="button" className="auth-textlink" onClick={() => { setCodeSentTo(null); setCode(""); setError(null); }}>
-                  Changer d'email
+                  {t("Changer d'email")}
                 </button>
               </p>
             </div>
@@ -347,22 +348,22 @@ export default function Login() {
             <div className="auth-oauth">
               {providers.apple && (
                 <button type="button" className="auth-oauth-btn auth-oauth-apple" onClick={() => handleProvider("apple")}>
-                  <AppleLogo /> Continuer avec Apple
+                  <AppleLogo /> {t("Continuer avec Apple")}
                 </button>
               )}
               {providers.google && (
                 <button type="button" className="auth-oauth-btn auth-oauth-google" onClick={() => handleProvider("google")}>
-                  <GoogleLogo /> Continuer avec Google
+                  <GoogleLogo /> {t("Continuer avec Google")}
                 </button>
               )}
-              <div className="auth-sep"><span>ou</span></div>
+              <div className="auth-sep"><span>{t("ou")}</span></div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="auth-form">
             {mode === "signup" && (
               <div className="auth-field">
-                <span className="auth-label" id="role-label">Je suis</span>
+                <span className="auth-label" id="role-label">{t("Je suis")}</span>
                 <div className="auth-roles" role="radiogroup" aria-labelledby="role-label">
                   {ROLES.map((r) => (
                     <button
@@ -377,8 +378,8 @@ export default function Login() {
                         <span className="auth-role-icon" aria-hidden="true">{r.icon}</span>
                         <span className="auth-radio" aria-hidden="true" />
                       </span>
-                      <span className="auth-role-title">{r.title}</span>
-                      <span className="auth-role-text">{r.text}</span>
+                      <span className="auth-role-title">{t(r.title)}</span>
+                      <span className="auth-role-text">{t(r.text)}</span>
                     </button>
                   ))}
                 </div>
@@ -386,7 +387,7 @@ export default function Login() {
             )}
 
             <label className="auth-field">
-              <span className="auth-label">Adresse email</span>
+              <span className="auth-label">{t("Adresse email")}</span>
               <input
                 className="auth-input"
                 type="email"
@@ -394,16 +395,16 @@ export default function Login() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="toi@exemple.fr"
+                placeholder={t("toi@exemple.fr")}
               />
             </label>
 
             {mode !== "forgot" && usePassword && (
               <div className="auth-field">
                 <span className="auth-label-row">
-                  <label className="auth-label" htmlFor="auth-password">Mot de passe</label>
+                  <label className="auth-label" htmlFor="auth-password">{t("Mot de passe")}</label>
                   {mode === "signin" && (
-                    <button type="button" className="auth-textlink" onClick={() => switchMode("forgot")}>Mot de passe oublié ?</button>
+                    <button type="button" className="auth-textlink" onClick={() => switchMode("forgot")}>{t("Mot de passe oublié ?")}</button>
                   )}
                 </span>
                 <div className="auth-input auth-input-pw">
@@ -419,7 +420,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                   <button type="button" className="auth-textlink" onClick={() => setShowPassword((s) => !s)}>
-                    {showPassword ? "Masquer" : "Afficher"}
+                    {showPassword ? t("Masquer") : t("Afficher")}
                   </button>
                 </div>
                 {mode === "signup" && (
@@ -428,8 +429,8 @@ export default function Login() {
                       {[1, 2, 3, 4].map((i) => <span key={i} className={i <= score ? "on" : ""} />)}
                     </div>
                     <span className="auth-hint">
-                      {score > 0 && <strong>{SCORE_LABEL[score]} · </strong>}
-                      {PASSWORD_HINT}.
+                      {score > 0 && <strong>{t(SCORE_LABEL[score])} · </strong>}
+                      {t(PASSWORD_HINT)}.
                     </span>
                   </>
                 )}
@@ -442,16 +443,16 @@ export default function Login() {
                   <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
                   <span className="auth-box" aria-hidden="true"><CheckIcon /></span>
                   <span>
-                    J'accepte les <Link to="/cgu" target="_blank" rel="noopener noreferrer">CGU</Link>, la{" "}
-                    <Link to="/confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</Link> et les{" "}
-                    <Link to="/rules" target="_blank" rel="noopener noreferrer">règles de bonne conduite</Link>.
+                    {t("J'accepte les")} <Link to="/cgu" target="_blank" rel="noopener noreferrer">{t("CGU")}</Link>, {t("la")}{" "}
+                    <Link to="/confidentialite" target="_blank" rel="noopener noreferrer">{t("politique de confidentialité")}</Link> {t("et les")}{" "}
+                    <Link to="/rules" target="_blank" rel="noopener noreferrer">{t("règles de bonne conduite")}</Link>.
                     <span className="auth-req"> *</span>
                   </span>
                 </label>
                 <label className="auth-check">
                   <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
                   <span className="auth-box" aria-hidden="true"><CheckIcon /></span>
-                  <span>Recevoir les nouveaux ultras et les actualités par email <span className="auth-muted">(facultatif)</span></span>
+                  <span>{t("Recevoir les nouveaux ultras et les actualités par email")} <span className="auth-muted">{t("(facultatif)")}</span></span>
                 </label>
               </>
             )}
@@ -460,33 +461,33 @@ export default function Login() {
               {loading
                 ? "…"
                 : mode === "forgot"
-                  ? "Envoyer le lien"
+                  ? t("Envoyer le lien")
                   : !usePassword
-                    ? "Recevoir un code par email"
+                    ? t("Recevoir un code par email")
                     : mode === "signin"
-                      ? "Se connecter"
-                      : "Créer mon compte"}
+                      ? t("Se connecter")
+                      : t("Créer mon compte")}
             </button>
             {mode !== "forgot" && (
               <button type="button" className="auth-textlink auth-pw-toggle" onClick={() => { setUsePassword((v) => !v); setError(null); }}>
                 {usePassword
-                  ? "Recevoir plutôt un code par email"
+                  ? t("Recevoir plutôt un code par email")
                   : mode === "signin"
-                    ? "Utiliser mon mot de passe"
-                    : "Créer un compte avec mot de passe"}
+                    ? t("Utiliser mon mot de passe")
+                    : t("Créer un compte avec mot de passe")}
               </button>
             )}
           </form>
 
           <p className="auth-foot">
             {mode === "signin" && (
-              <>Pas encore de compte ? <button type="button" className="auth-textlink" onClick={() => switchMode("signup")}>Créer un compte</button></>
+              <>{t("Pas encore de compte ?")} <button type="button" className="auth-textlink" onClick={() => switchMode("signup")}>{t("Créer un compte")}</button></>
             )}
             {mode === "signup" && (
-              <>Déjà un compte ? <button type="button" className="auth-textlink" onClick={() => switchMode("signin")}>Se connecter</button></>
+              <>{t("Déjà un compte ?")} <button type="button" className="auth-textlink" onClick={() => switchMode("signin")}>{t("Se connecter")}</button></>
             )}
             {mode === "forgot" && (
-              <button type="button" className="auth-textlink" onClick={() => switchMode("signin")}>← Retour à la connexion</button>
+              <button type="button" className="auth-textlink" onClick={() => switchMode("signin")}>{t("← Retour à la connexion")}</button>
             )}
           </p>
           </>

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { t } from "../lib/i18n";
 
 const EMPTY = { name: "", email: "", race_name: "", website: "", message: "" };
 const MESSAGE_MAX = 3000;
@@ -31,16 +32,16 @@ function Aside() {
         ))}
       </svg>
       <div className="auth-aside-head">
-        <span className="auth-eyebrow">PROPOSER UN ULTRA</span>
-        <h1 className="auth-title">UN ULTRA MANQUE ?<br />DIS-LE-NOUS.</h1>
+        <span className="auth-eyebrow">{t("PROPOSER UN ULTRA")}</span>
+        <h1 className="auth-title">{t("UN ULTRA MANQUE ?")}<br />{t("DIS-LE-NOUS.")}</h1>
       </div>
       <ul className="auth-perks">
         {PERKS.map(([title, text]) => (
           <li key={title}>
             <span className="auth-perk-ico"><Check /></span>
             <div>
-              <div className="auth-perk-title">{title}</div>
-              <div className="auth-perk-text">{text}</div>
+              <div className="auth-perk-title">{t(title)}</div>
+              <div className="auth-perk-text">{t(text)}</div>
             </div>
           </li>
         ))}
@@ -82,7 +83,7 @@ export default function SubmitRace() {
     });
     setSaving(false);
 
-    if (error) setError("L'envoi n'a pas abouti. Réessaie dans un instant.");
+    if (error) setError(t("L'envoi n'a pas abouti. Réessaie dans un instant."));
     else setSent(true);
   };
 
@@ -94,40 +95,40 @@ export default function SubmitRace() {
         <section className="auth-main">
           {sent ? (
             <div className="auth-forgot-head">
-              <h2 className="auth-h2">Merci !</h2>
+              <h2 className="auth-h2">{t("Merci !")}</h2>
               <p>
-                Ta proposition est bien arrivée. On la regarde sous 48 h et on revient vers toi
-                {form.email ? <> à <strong>{form.email}</strong></> : null} si besoin.
+                {t("Ta proposition est bien arrivée. On la regarde sous 48 h et on revient vers toi")}
+                {form.email ? <> {t("à")} <strong>{form.email}</strong></> : null} {t("si besoin.")}
               </p>
               <p style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link to="/ultras" className="v2-btn v2-btn-rust">Voir les ultras</Link>
+                <Link to="/ultras" className="v2-btn v2-btn-rust">{t("Voir les ultras")}</Link>
                 <button type="button" className="v2-btn" onClick={() => { setForm({ ...EMPTY, name: form.name, email: form.email }); setSent(false); shownAt.current = Date.now(); }}>
-                  Proposer un autre ultra
+                  {t("Proposer un autre ultra")}
                 </button>
               </p>
             </div>
           ) : (
             <>
               <div className="auth-forgot-head">
-                <h2 className="auth-h2">Proposer un ultra</h2>
-                <p>Tu organises un ultra, ou tu en connais un qui mérite sa place dans le répertoire ? Décris-le ici.</p>
+                <h2 className="auth-h2">{t("Proposer un ultra")}</h2>
+                <p>{t("Tu organises un ultra, ou tu en connais un qui mérite sa place dans le répertoire ? Décris-le ici.")}</p>
               </div>
 
               {error && <div className="error-box" role="alert">{error}</div>}
 
               <form onSubmit={handleSubmit} className="auth-form">
                 <label className="auth-field">
-                  <span className="auth-label">Nom de l'ultra <span className="auth-req">*</span></span>
-                  <input className="auth-input" required maxLength={200} value={form.race_name} onChange={(e) => field("race_name", e.target.value)} placeholder="Ex. : Race Across France" />
+                  <span className="auth-label">{t("Nom de l'ultra")} <span className="auth-req">*</span></span>
+                  <input className="auth-input" required maxLength={200} value={form.race_name} onChange={(e) => field("race_name", e.target.value)} placeholder={t("Ex. : Race Across France")} />
                 </label>
 
                 <label className="auth-field">
-                  <span className="auth-label">Site web ou lien <span className="auth-muted">(facultatif)</span></span>
+                  <span className="auth-label">{t("Site web ou lien")} <span className="auth-muted">{t("(facultatif)")}</span></span>
                   <input className="auth-input" type="text" inputMode="url" maxLength={500} value={form.website} onChange={(e) => field("website", e.target.value)} placeholder="https://…" />
                 </label>
 
                 <label className="auth-field">
-                  <span className="auth-label">Infos utiles <span className="auth-req">*</span></span>
+                  <span className="auth-label">{t("Infos utiles")} <span className="auth-req">*</span></span>
                   <textarea
                     className="auth-input auth-textarea"
                     required
@@ -135,22 +136,22 @@ export default function SubmitRace() {
                     maxLength={MESSAGE_MAX}
                     value={form.message}
                     onChange={(e) => field("message", e.target.value)}
-                    placeholder="Pays, date, distance, dénivelé, discipline (route, gravel, VTT)…"
+                    placeholder={t("Pays, date, distance, dénivelé, discipline (route, gravel, VTT)…")}
                   />
                   <span className="auth-hint" style={{ textAlign: "right" }}>{form.message.length} / {MESSAGE_MAX}</span>
                 </label>
 
                 <div className="auth-row2">
                   <label className="auth-field">
-                    <span className="auth-label">Ton nom <span className="auth-req">*</span></span>
+                    <span className="auth-label">{t("Ton nom")} <span className="auth-req">*</span></span>
                     <input className="auth-input" required maxLength={120} autoComplete="name" value={form.name} onChange={(e) => field("name", e.target.value)} />
                   </label>
                   <label className="auth-field">
-                    <span className="auth-label">Ton email <span className="auth-req">*</span></span>
-                    <input className="auth-input" type="email" required maxLength={254} autoComplete="email" value={form.email} onChange={(e) => field("email", e.target.value)} placeholder="toi@exemple.fr" />
+                    <span className="auth-label">{t("Ton email")} <span className="auth-req">*</span></span>
+                    <input className="auth-input" type="email" required maxLength={254} autoComplete="email" value={form.email} onChange={(e) => field("email", e.target.value)} placeholder={t("toi@exemple.fr")} />
                   </label>
                 </div>
-                <span className="auth-hint" style={{ marginTop: -12 }}>Ton email sert seulement à te recontacter au sujet de cet ultra.</span>
+                <span className="auth-hint" style={{ marginTop: -12 }}>{t("Ton email sert seulement à te recontacter au sujet de cet ultra.")}</span>
 
                 {/* Hors écran plutôt que display:none, que certains robots savent ignorer. */}
                 <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}>
@@ -167,13 +168,13 @@ export default function SubmitRace() {
                 </div>
 
                 <button className="v2-btn v2-btn-rust auth-submit" type="submit" disabled={saving}>
-                  {saving ? "Envoi…" : "Envoyer ma proposition"}
+                  {saving ? t("Envoi…") : t("Envoyer ma proposition")}
                 </button>
               </form>
 
               {!user && (
                 <p className="auth-foot">
-                  Organisateur ? <Link to="/login?mode=signup" className="auth-textlink">Crée ton compte</Link> pour gérer tes fiches toi-même.
+                  {t("Organisateur ?")} <Link to="/login?mode=signup" className="auth-textlink">{t("Crée ton compte")}</Link> {t("pour gérer tes fiches toi-même.")}
                 </p>
               )}
             </>

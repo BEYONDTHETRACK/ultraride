@@ -6,6 +6,7 @@ import ClampedBlurb from "./ClampedBlurb";
 import { getFlagEmoji } from "../lib/emea";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
+import { t, locale } from "../lib/i18n";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -33,7 +34,7 @@ function DisciplineBadge({ discipline }) {
         flexShrink: 0,
       }}
     >
-      {discipline}
+      {t(discipline)}
     </span>
   );
 }
@@ -61,7 +62,7 @@ function FormatBadge({ format }) {
         whiteSpace: "nowrap",
       }}
     >
-      {format}
+      {t(format)}
       <span style={{ fontSize: "0.85em" }}>{emoji}</span>
     </span>
   );
@@ -90,7 +91,7 @@ export default function RaceCard({ race }) {
                 </span>
               )}
               <span style={{ fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.03em", lineHeight: 1 }}>
-                {race.country?.toUpperCase()}
+                {t(race.country)?.toUpperCase()}
               </span>
               {race.discipline && <DisciplineBadge discipline={race.discipline} />}
             </div>
@@ -99,7 +100,7 @@ export default function RaceCard({ race }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <FavoriteButton raceId={race.id} />
             <span className={`badge ${race.open ? "badge-published" : "badge-rejected"}`}>
-              {race.open ? "Ouvert" : "Fermé"}
+              {race.open ? t("Ouvert") : t("Fermé")}
             </span>
           </div>
         </div>
@@ -110,8 +111,8 @@ export default function RaceCard({ race }) {
 
         <div className="race-card-stats">
           <span>{race.km ?? "—"} <small>km</small></span>
-          <span>{race.dplus ? race.dplus.toLocaleString("fr-FR") : "—"} <small>D+</small></span>
-          <span className="race-card-month">{race.month}</span>
+          <span>{race.dplus ? race.dplus.toLocaleString(locale()) : "—"} <small>D+</small></span>
+          <span className="race-card-month">{t(race.month)}</span>
           <PriceTag price={race.price} />
         </div>
 
@@ -125,11 +126,11 @@ export default function RaceCard({ race }) {
         >
           <span style={{ whiteSpace: "nowrap" }}>
             {race.parcours && (
-              <>{PARCOURS_EMOJI[race.parcours]} {PARCOURS_LABEL[race.parcours] || race.parcours}</>
+              <>{PARCOURS_EMOJI[race.parcours]} {t(PARCOURS_LABEL[race.parcours] || race.parcours)}</>
             )}
           </span>
           <span style={{ whiteSpace: "nowrap" }}>
-            {race.mode && <>{MODE_EMOJI[race.mode]} {race.mode}</>}
+            {race.mode && <>{MODE_EMOJI[race.mode]} {t(race.mode)}</>}
           </span>
         </div>
       </Link>

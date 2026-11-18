@@ -2190,3 +2190,12 @@ a.sv-bar-link:hover{background:var(--track);}
 .auth-textarea{min-height:132px;padding:12px 14px;line-height:1.5;resize:vertical;}
 .auth-row2{display:flex;flex-wrap:wrap;gap:20px;}
 .auth-row2 .auth-field{flex:1 1 220px;}
+
+/* Sélecteur de langue FR / EN */
+.lang-switch{display:inline-flex;border:1px solid currentColor;border-radius:999px;overflow:hidden;opacity:.9;flex:none}
+.lang-switch button{font:600 12px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;background:transparent;color:inherit;border:0;padding:6px 9px;cursor:pointer;min-height:0;width:auto}
+.lang-switch button.on{background:var(--rust,#C4622D);color:#fff}
+.mobile-nav .lang-switch button{border:0;width:auto;padding:8px 11px}
+.legal-fr-note{border:1px solid var(--line);border-left:4px solid var(--rust,#C4622D);border-radius:10px;padding:12px 14px;font-size:15px;margin:0 0 24px}
+.translate-btn{display:inline-flex;align-items:center;gap:7px;margin:8px 0 4px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;color:var(--rust-text,#9A4519);text-decoration:none;background:transparent}
+.translate-btn:hover{border-color:currentColor}

@@ -28,6 +28,9 @@ import cgu from "./content/cgu.md?raw";
 import confidentialite from "./content/confidentialite.md?raw";
 import leProjet from "./content/le-projet.md?raw";
 import modeEmploi from "./content/mode-d-emploi.md?raw";
+import leProjetEn from "./content/le-projet.en.md?raw";
+import modeEmploiEn from "./content/mode-d-emploi.en.md?raw";
+import { isEn, t } from "./lib/i18n";
 import AdminLayout from "./admin/AdminLayout";
 import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
@@ -86,10 +89,10 @@ export default function App() {
         <Route path="/liens" element={<Links />} />
         <Route path="/ig" element={<Navigate to="/liens?utm_source=instagram&utm_medium=social&utm_campaign=bio" replace />} />
         <Route path="/fb" element={<Navigate to="/liens?utm_source=facebook&utm_medium=social&utm_campaign=bio" replace />} />
-        <Route path="/cgu" element={<LegalPage content={cgu} title="CGU — UltraRide" />} />
-        <Route path="/confidentialite" element={<LegalPage content={confidentialite} title="Confidentialité — UltraRide" />} />
-        <Route path="/le-projet" element={<LegalPage content={leProjet} title="Le projet — UltraRide" />} />
-        <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" className="nowrap-first-cols" />} />
+        <Route path="/cgu" element={<LegalPage content={cgu} title={t("CGU — UltraRide")} frOnly />} />
+        <Route path="/confidentialite" element={<LegalPage content={confidentialite} title={t("Confidentialité — UltraRide")} frOnly />} />
+        <Route path="/le-projet" element={<LegalPage content={isEn() ? leProjetEn : leProjet} title={t("Le projet — UltraRide")} />} />
+        <Route path="/mode-d-emploi" element={<LegalPage content={isEn() ? modeEmploiEn : modeEmploi} title={t("Mode d'emploi — UltraRide")} className="nowrap-first-cols" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminOverview />} />

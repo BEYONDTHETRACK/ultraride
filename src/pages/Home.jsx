@@ -9,6 +9,7 @@ import {
   LIST_COLUMNS, DISCIPLINE_COLOR, isUpcoming, byStartDate, countdownLabel,
   formatShortDate, formatNumber, haversineKm, raceCoords, placeLine,
 } from "../lib/raceDisplay";
+import { t } from "../lib/i18n";
 
 // Rayon maximum et nombre de fiches du bloc « Près de toi ».
 const NEARBY_RADIUS_KM = 400;
@@ -47,9 +48,9 @@ function FeaturedRace({ race }) {
     <Link to={`/courses/${race.id}`} className="v2-feature">
       <div className="v2-feature-media">
         <FeatureArt withRoute={!race.image_url} />
-        <span className="v2-feature-tag">À LA UNE</span>
+        <span className="v2-feature-tag">{t("À LA UNE")}</span>
         {countdown && (
-          <div className="v2-stamp"><span>DÉPART</span><span>{countdown === "Aujourd'hui" ? "J-0" : countdown}</span></div>
+          <div className="v2-stamp"><span>{t("DÉPART")}</span><span>{countdown === t("Aujourd'hui") ? t("J-{n}", { n: 0 }) : countdown}</span></div>
         )}
         {race.image_url && <img className="v2-feature-logo" src={race.image_url} alt="" />}
         <div className="v2-feature-bottom">
@@ -58,7 +59,7 @@ function FeaturedRace({ race }) {
             <FormatBadge format={race.format} />
             {race.country && (
               <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>
-                {race.country.toUpperCase()}
+                {t(race.country).toUpperCase()}
               </span>
             )}
           </div>
@@ -66,10 +67,10 @@ function FeaturedRace({ race }) {
         </div>
       </div>
       <div className="v2-statgrid">
-        <div className="v2-stat"><span className="v2-label">Distance</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">{t("Distance")}</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
         <div className="v2-stat"><span className="v2-label">D+</span><b>{race.dplus ? `${formatNumber(race.dplus)} m` : "—"}</b></div>
-        <div className="v2-stat"><span className="v2-label">Départ</span><b>{formatShortDate(race.start_date) || race.month || "—"}</b></div>
-        <div className="v2-stat"><span className="v2-label">Lieu</span><b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{placeLine({ ...race, country: null }) || race.country || "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">{t("Départ")}</span><b>{formatShortDate(race.start_date) || t(race.month) || "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">{t("Lieu")}</span><b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{placeLine({ ...race, country: null }) || t(race.country) || "—"}</b></div>
       </div>
     </Link>
   );
@@ -99,8 +100,8 @@ function FeaturedCarousel({ races }) {
 
   useEffect(() => {
     if (paused || hovered || count < 2) return;
-    const t = setTimeout(() => setIndex((i) => (i + 1) % count), SLIDE_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setIndex((i) => (i + 1) % count), SLIDE_MS);
+    return () => clearTimeout(timer);
   }, [index, paused, hovered, count]);
 
   if (!count) return null;
@@ -114,15 +115,15 @@ function FeaturedCarousel({ races }) {
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      aria-roledescription="carrousel"
-      aria-label="Ultras à la une"
+      aria-roledescription={t("carrousel")}
+      aria-label={t("Ultras à la une")}
     >
       <div key={race.id} className="v2-feature-slide" aria-live={paused ? "polite" : "off"}>
         <FeaturedRace race={race} />
       </div>
       {count > 1 && (
         <div className="v2-carousel-bar">
-          <button type="button" className="v2-carousel-btn" onClick={() => go(index - 1)} aria-label="Ultra précédent">
+          <button type="button" className="v2-carousel-btn" onClick={() => go(index - 1)} aria-label={t("Ultra précédent")}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
           </button>
           <div className="v2-carousel-dots">
@@ -132,21 +133,21 @@ function FeaturedCarousel({ races }) {
                 type="button"
                 className={`v2-carousel-dot${i === index ? " is-active" : ""}`}
                 onClick={() => go(i)}
-                aria-label={`Afficher ${r.name}`}
+                aria-label={t("Afficher {name}", { name: r.name })}
                 aria-current={i === index ? "true" : undefined}
               />
             ))}
           </div>
-          <button type="button" className="v2-carousel-btn" onClick={() => go(index + 1)} aria-label="Ultra suivant">
+          <button type="button" className="v2-carousel-btn" onClick={() => go(index + 1)} aria-label={t("Ultra suivant")}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
           </button>
-          <button type="button" className="v2-carousel-btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Lancer le défilement" : "Mettre en pause"}>
+          <button type="button" className="v2-carousel-btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? t("Lancer le défilement") : t("Mettre en pause")}>
             {paused
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>}
           </button>
           <button type="button" className="v2-carousel-shuffle" onClick={() => go(index + 1 + Math.floor(Math.random() * (count - 1)))}>
-            Au hasard
+            {t("Au hasard")}
           </button>
         </div>
       )}
@@ -235,34 +236,33 @@ export default function Home() {
         <section className="v2-hero">
           <div className="v2-hero-text">
             <div className="v2-eyebrow">
-              {stats ? `${stats.total} ultras · ${stats.organizers} organisateurs · ${stats.countries} pays` : "Répertoire ultra-distance"}
+              {stats ? t("{a} ultras · {b} organisateurs · {c} pays", { a: stats.total, b: stats.organizers, c: stats.countries }) : t("Répertoire ultra-distance")}
             </div>
-            <h1 className="v2-hero-title">TROUVE TON<br />PROCHAIN ULTRA</h1>
+            <h1 className="v2-hero-title">{t("TROUVE TON")}<br />{t("PROCHAIN ULTRA")}</h1>
             <p className="v2-hero-sub">
-              Route, gravel et VTT en autonomie, en Europe et en Afrique du Nord. Les dates, les parcours et les
-              inscriptions au même endroit.
+              {t("Route, gravel et VTT en autonomie, en Europe et en Afrique du Nord. Les dates, les parcours et les inscriptions au même endroit.")}
             </p>
 
             <form className="v2-search" onSubmit={submitSearch} role="search">
               <label className="v2-search-field">
                 <SearchIcon />
-                <span className="sr-only">Rechercher un ultra</span>
+                <span className="sr-only">{t("Rechercher un ultra")}</span>
                 <input
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Nom, pays, organisateur…"
+                  placeholder={t("Nom, pays, organisateur…")}
                 />
               </label>
-              <button type="submit" className="v2-btn v2-btn-rust">Rechercher</button>
+              <button type="submit" className="v2-btn v2-btn-rust">{t("Rechercher")}</button>
             </form>
 
             <div className="v2-chips">
-              <Link to="/ultras" className="v2-chip v2-chip-active">Tous</Link>
+              <Link to="/ultras" className="v2-chip v2-chip-active">{t("Tous")}</Link>
               {DISCIPLINES.map((d) => (
                 <Link key={d} to={`/ultras?discipline=${encodeURIComponent(d)}`} className="v2-chip">
                   <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />
-                  {d}{stats ? ` · ${stats.byDiscipline[d]}` : ""}
+                  {t(d)}{stats ? ` · ${stats.byDiscipline[d]}` : ""}
                 </Link>
               ))}
             </div>
@@ -274,13 +274,13 @@ export default function Home() {
         <DataFreshness />
 
         {error && <div className="error-box">{error}</div>}
-        {races === null && !error && <p className="muted">Chargement…</p>}
+        {races === null && !error && <p className="muted">{t("Chargement…")}</p>}
 
         {nextDepartures.length > 0 && (
           <section className="v2-section">
             <div className="v2-section-head">
-              <h2 className="v2-h2">Prochains départs</h2>
-              <Link to="/ultras" className="v2-link">Voir les {upcoming.length} départs à venir →</Link>
+              <h2 className="v2-h2">{t("Prochains départs")}</h2>
+              <Link to="/ultras" className="v2-link">{t("Voir les {n} départs à venir →", { n: upcoming.length })}</Link>
             </div>
             <div className="v2-grid-rows">
               {nextDepartures.map((r) => <RaceRow key={r.id} race={r} />)}
@@ -291,8 +291,8 @@ export default function Home() {
         {races && (
           <section className="v2-section">
             <div className="v2-section-head">
-              <h2 className="v2-h2">Près de toi</h2>
-              <Link to="/ultras" className="v2-link">Voir sur la carte →</Link>
+              <h2 className="v2-h2">{t("Près de toi")}</h2>
+              <Link to="/ultras" className="v2-link">{t("Voir sur la carte →")}</Link>
             </div>
             {geoStatus === "granted" && nearby.length > 0 ? (
               <div className="v2-grid-tiles">
@@ -301,22 +301,22 @@ export default function Home() {
                     key={r.id}
                     race={r}
                     index={i}
-                    footer={<span className="v2-countdown" style={{ color: "var(--moss)" }}>à {Math.round(r._distanceKm)} km de toi</span>}
+                    footer={<span className="v2-countdown" style={{ color: "var(--moss)" }}>{t("à {n} km de toi", { n: Math.round(r._distanceKm) })}</span>}
                   />
                 ))}
               </div>
             ) : (
               <div className="v2-geo">
                 <p className="muted" style={{ margin: 0, fontSize: 15, maxWidth: 640 }}>
-                  {geoStatus === "loading" && "Localisation en cours…"}
-                  {geoStatus === "granted" && `Aucun départ à venir à moins de ${NEARBY_RADIUS_KM} km de toi pour l'instant.`}
-                  {geoStatus === "denied" && "Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les ultras proches."}
-                  {geoStatus === "unsupported" && "Ton navigateur ne permet pas la géolocalisation."}
-                  {geoStatus === "idle" && `Active la géolocalisation pour voir les départs à moins de ${NEARBY_RADIUS_KM} km. Ta position reste dans ton navigateur : elle n'est ni envoyée ni enregistrée.`}
+                  {geoStatus === "loading" && t("Localisation en cours…")}
+                  {geoStatus === "granted" && t("Aucun départ à venir à moins de {n} km de toi pour l'instant.", { n: NEARBY_RADIUS_KM })}
+                  {geoStatus === "denied" && t("Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les ultras proches.")}
+                  {geoStatus === "unsupported" && t("Ton navigateur ne permet pas la géolocalisation.")}
+                  {geoStatus === "idle" && t("Active la géolocalisation pour voir les départs à moins de {n} km. Ta position reste dans ton navigateur : elle n'est ni envoyée ni enregistrée.", { n: NEARBY_RADIUS_KM })}
                 </p>
                 {(geoStatus === "idle" || geoStatus === "denied") && (
                   <button type="button" className="v2-btn v2-btn-ink" onClick={requestLocation}>
-                    {geoStatus === "denied" ? "Réessayer" : "Activer la géolocalisation"}
+                    {geoStatus === "denied" ? t("Réessayer") : t("Activer la géolocalisation")}
                   </button>
                 )}
               </div>
@@ -335,7 +335,7 @@ export default function Home() {
                   style={{ background: d === "VTT" ? "#9A4519" : DISCIPLINE_COLOR[d] }}
                 >
                   <b>{stats.byDiscipline[d]}</b>
-                  <span>ULTRAS {d.toUpperCase()} →</span>
+                  <span>{t("ULTRAS {d} →", { d: t(d).toUpperCase() })}</span>
                 </Link>
               ))}
             </div>
@@ -346,13 +346,13 @@ export default function Home() {
       <section className="v2-band">
         <div className="v2-wrap v2-band-inner">
           <div style={{ flex: "1 1 460px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span className="v2-eyebrow" style={{ color: "#E9A27A" }}>Organisateurs</span>
-            <h2>TU ORGANISES UN ULTRA ?</h2>
-            <p>Crée ton espace, ajoute tes éditions et tiens tes dates à jour. Chaque nouvelle édition garde l'historique des précédentes.</p>
+            <span className="v2-eyebrow" style={{ color: "#E9A27A" }}>{t("Organisateurs")}</span>
+            <h2>{t("TU ORGANISES UN ULTRA ?")}</h2>
+            <p>{t("Crée ton espace, ajoute tes éditions et tiens tes dates à jour. Chaque nouvelle édition garde l'historique des précédentes.")}</p>
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link to="/proposer-course" className="v2-btn v2-btn-rust">Proposer un ultra</Link>
-            <Link to="/login?mode=signup" className="v2-btn v2-btn-outline-light">Créer mon espace</Link>
+            <Link to="/proposer-course" className="v2-btn v2-btn-rust">{t("Proposer un ultra")}</Link>
+            <Link to="/login?mode=signup" className="v2-btn v2-btn-outline-light">{t("Créer mon espace")}</Link>
           </div>
         </div>
       </section>

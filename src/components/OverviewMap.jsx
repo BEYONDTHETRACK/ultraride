@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
+import { t, tn, locale } from "../lib/i18n";
 
 // La plupart des courses sont en Europe ; quelques-unes (Canada, Brésil,
 // Pérou…) sont bien plus loin et forceraient un dézoom massif si on cadrait
@@ -50,7 +51,7 @@ export default function OverviewMap({ races }) {
       });
 
       marker.bindTooltip(
-        `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString("fr-FR") : "—"} D+ · ${r.month ?? ""}</div>`,
+        `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString(locale()) : "—"} D+ · ${t(r.month) ?? ""}</div>`,
         { direction: "top", offset: [0, -6] }
       );
 
@@ -71,14 +72,14 @@ export default function OverviewMap({ races }) {
   return (
     <div className="map-box">
       <div className="map-box-head">
-        <span>Carte</span>
-        <span className="muted">{races.length} balise{races.length !== 1 ? "s" : ""}</span>
+        <span>{t("Carte")}</span>
+        <span className="muted">{tn(races.length, "{n} balise", "{n} balises")}</span>
       </div>
       <div ref={containerRef} className="map-box-canvas" />
       <div className="map-box-legend">
         <span><span className="dot" style={{ background: DISCIPLINE_COLORS.Gravel }} /> Gravel</span>
-        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.Route }} /> Route</span>
-        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.VTT }} /> VTT</span>
+        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.Route }} /> {t("Route")}</span>
+        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.VTT }} /> {t("VTT")}</span>
         <span className="map-box-attrib">© OpenStreetMap contributors</span>
       </div>
     </div>

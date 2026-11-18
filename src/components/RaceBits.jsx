@@ -3,6 +3,7 @@ import {
   disciplineColor, dateTileParts, countdownLabel, statsLine, placeLine,
   FORMAT_LABEL, FORMAT_BG,
 } from "../lib/raceDisplay";
+import { t, locale } from "../lib/i18n";
 
 export function DateTile({ race, size = 64 }) {
   const { day, month } = dateTileParts(race);
@@ -17,7 +18,7 @@ export function DateTile({ race, size = 64 }) {
 export function Countdown({ race }) {
   const label = countdownLabel(race);
   if (!label) return null;
-  if (label === "Aujourd'hui") return <span className="v2-pill v2-pill-rust">AUJOURD'HUI</span>;
+  if (label === t("Aujourd'hui")) return <span className="v2-pill v2-pill-rust">{t("Aujourd'hui").toUpperCase()}</span>;
   return <span className="v2-countdown">{label}</span>;
 }
 
@@ -30,7 +31,7 @@ export function DisciplineBadge({ discipline, light = false }) {
         ? { background: "#F5F1E6", color: "#1B2B20" }
         : { background: disciplineColor(discipline), color: "#FFFFFF" }}
     >
-      {discipline.toUpperCase()}
+      {t(discipline).toUpperCase()}
     </span>
   );
 }
@@ -57,7 +58,7 @@ export function RaceRow({ race, highlighted = false, onHover, extra }) {
       <DateTile race={race} />
       <div className="v2-row-body">
         <span className="v2-row-name">{race.name}</span>
-        <span className="v2-row-place">{placeLine(race) || race.country}</span>
+        <span className="v2-row-place">{placeLine(race) || t(race.country)}</span>
         {statsLine(race, { withPrice: true }) && <span className="v2-row-stats">{statsLine(race, { withPrice: true })}</span>}
       </div>
       {extra}
@@ -89,14 +90,14 @@ export function RaceTile({ race, index = 0, footer }) {
           ? <img src={race.image_url} alt="" loading="lazy" decoding="async" />
           : <RouteDoodle variant={index} />}
         <span className="v2-pill v2-tile-badge" style={{ background: "#F5F1E6", color: "#1B2B20" }}>
-          {(race.discipline || "").toUpperCase()}
+          {t(race.discipline || "").toUpperCase()}
         </span>
       </div>
       <div className="v2-tile-body">
         <span className="v2-tile-name">{race.name}</span>
-        <span className="v2-tile-place">{placeLine(race) || race.country}</span>
+        <span className="v2-tile-place">{placeLine(race) || t(race.country)}</span>
         <span className="v2-tile-stats">
-          {[race.km ? `${Math.round(race.km).toLocaleString("fr-FR")} km` : null, countdownLabel(race)].filter(Boolean).join(" · ")}
+          {[race.km ? `${Math.round(race.km).toLocaleString(locale())} km` : null, countdownLabel(race)].filter(Boolean).join(" · ")}
         </span>
         {footer}
       </div>

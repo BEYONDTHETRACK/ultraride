@@ -5,6 +5,7 @@ import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { parseTrackFile, formatDuration } from "../lib/gpx";
+import { t, trObj, locale } from "../lib/i18n";
 
 // Vitesse moyenne globale : distance divisée par le temps total, pauses
 // comprises. C'est la mesure qui fait foi en ultra-distance, et elle ne
@@ -40,11 +41,11 @@ function ResultTrackMap({ track }) {
 
     L.circleMarker(latlngs[0], {
       radius: 6, color: "#15793F", fillColor: "#15793F", fillOpacity: 0.9,
-    }).bindTooltip("Départ").addTo(map);
+    }).bindTooltip(t("Départ")).addTo(map);
 
     L.circleMarker(latlngs[latlngs.length - 1], {
       radius: 6, color: "#C1543F", fillColor: "#C1543F", fillOpacity: 0.9,
-    }).bindTooltip("Arrivée").addTo(map);
+    }).bindTooltip(t("Arrivée")).addTo(map);
 
     map.fitBounds(line.getBounds().pad(0.1));
     mapRef.current = map;
@@ -52,7 +53,7 @@ function ResultTrackMap({ track }) {
   }, [track]);
 
   if (!track || track.length < 2) {
-    return <p className="muted" style={{ fontSize: 13 }}>Trace indisponible pour ce résultat.</p>;
+    return <p className="muted" style={{ fontSize: 13 }}>{t("Trace indisponible pour ce résultat.")}</p>;
   }
   return <div ref={ref} className="result-track-map" />;
 }
@@ -85,11 +86,11 @@ function OrganizerSearchField({ value, onChangeText, onMatch, matchedOrganizer, 
 
   return (
     <div className="field" style={{ position: "relative" }}>
-      <label>Organisateur</label>
+      <label>{t("Organisateur")}</label>
       {matchedOrganizer ? (
         <div className="race-search-matched">
-          <span>✓ Lié à <strong>{matchedOrganizer.name}</strong></span>
-          <button type="button" className="filter-reset" onClick={onClearMatch}>Changer</button>
+          <span>✓ {t("Lié à")} <strong>{matchedOrganizer.name}</strong></span>
+          <button type="button" className="filter-reset" onClick={onClearMatch}>{t("Changer")}</button>
         </div>
       ) : (
         <div style={{ position: "relative" }}>
@@ -97,7 +98,7 @@ function OrganizerSearchField({ value, onChangeText, onMatch, matchedOrganizer, 
             value={value}
             onChange={(e) => handleType(e.target.value)}
             onFocus={() => suggestions.length > 0 && setOpen(true)}
-            placeholder="Nom de l'organisateur"
+            placeholder={t("Nom de l'organisateur")}
             autoComplete="off"
           />
           {open && suggestions.length > 0 && (
@@ -111,7 +112,7 @@ function OrganizerSearchField({ value, onChangeText, onMatch, matchedOrganizer, 
           )}
         </div>
       )}
-      <div className="field-hint">Si l'organisateur existe dans le répertoire, sélectionne-le pour rapprocher ton résultat.</div>
+      <div className="field-hint">{t("Si l'organisateur existe dans le répertoire, sélectionne-le pour rapprocher ton résultat.")}</div>
     </div>
   );
 }
@@ -145,15 +146,15 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
 
   return (
     <div className="field">
-      <label>Nom de l'ultra</label>
+      <label>{t("Nom de l'ultra")}</label>
       {matchedRace ? (
         <div>
           <div className="race-search-matched">
-            <span>✓ Rapprochée de <strong>{matchedRace.name}</strong></span>
-            <button type="button" className="filter-reset" onClick={onClearMatch}>Changer</button>
+            <span>✓ {t("Rapprochée de")} <strong>{matchedRace.name}</strong></span>
+            <button type="button" className="filter-reset" onClick={onClearMatch}>{t("Changer")}</button>
           </div>
           <div className="field-hint">
-            Le répertoire n'affiche qu'une édition à la fois — si tu as couru une autre année que celle actuellement listée, précise-le dans le champ "Année de réalisation" ci-dessous.
+            {t("Le répertoire n'affiche qu'une édition à la fois — si tu as couru une autre année que celle actuellement listée, précise-le dans le champ \"Année de réalisation\" ci-dessous.")}
           </div>
         </div>
       ) : (
@@ -162,7 +163,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
             value={value}
             onChange={(e) => handleType(e.target.value)}
             onFocus={() => suggestions.length > 0 && setOpen(true)}
-            placeholder="ex. Chasing the Sun"
+            placeholder={t("ex. Chasing the Sun")}
             autoComplete="off"
           />
           {open && suggestions.length > 0 && (
@@ -170,7 +171,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
               {suggestions.map((r) => (
                 <button type="button" key={r.id} className="race-search-suggestion" onClick={() => pick(r)}>
                   <div>{r.name}</div>
-                  <div className="muted mono" style={{ fontSize: 11 }}>{r.country}{r.organizer?.name ? ` · ${r.organizer.name}` : ""}</div>
+                  <div className="muted mono" style={{ fontSize: 11 }}>{t(r.country)}{r.organizer?.name ? ` · ${r.organizer.name}` : ""}</div>
                 </button>
               ))}
             </div>
@@ -178,7 +179,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
         </div>
       )}
       <div className="field-hint">
-        Si l'ultra existe déjà dans le répertoire (édition passée ou future), sélectionne-le pour rapprocher ton résultat.
+        {t("Si l'ultra existe déjà dans le répertoire (édition passée ou future), sélectionne-le pour rapprocher ton résultat.")}
       </div>
     </div>
   );
@@ -214,7 +215,7 @@ function AddResultForm({ onSaved, onCancel }) {
     // iOS grise parfois les .fit si on filtre trop strictement : on élargit
     // le filtre ci-dessous et on vérifie l'extension ici.
     if (!/\.fit$/i.test(file.name)) {
-      setGpxError("Ce fichier n'est pas une trace .fit. Exporte ta sortie au format FIT (Garmin, Wahoo, Strava…).");
+      setGpxError(t("Ce fichier n'est pas une trace .fit. Exporte ta sortie au format FIT (Garmin, Wahoo, Strava…)."));
       e.target.value = "";
       return;
     }
@@ -224,7 +225,7 @@ function AddResultForm({ onSaved, onCancel }) {
       const result = await parseTrackFile(file);
       setGpxInfo(result);
     } catch (err) {
-      setGpxError(err.message);
+      setGpxError(t(err.message));
     }
     setParsing(false);
   };
@@ -233,7 +234,7 @@ function AddResultForm({ onSaved, onCancel }) {
     e.preventDefault();
     if (!raceName.trim()) return;
     if (!gpxInfo) {
-      setError("Une trace GPX ou FIT est obligatoire pour ajouter un résultat au palmarès.");
+      setError(t("Une trace GPX ou FIT est obligatoire pour ajouter un résultat au palmarès."));
       return;
     }
     setSaving(true);
@@ -280,7 +281,7 @@ function AddResultForm({ onSaved, onCancel }) {
       />
 
       <div className="field">
-        <label>Année de réalisation</label>
+        <label>{t("Année de réalisation")}</label>
         <input
           type="number"
           min="1990"
@@ -289,51 +290,49 @@ function AddResultForm({ onSaved, onCancel }) {
           onChange={(e) => setEventYear(e.target.value)}
           placeholder={String(new Date().getFullYear())}
         />
-        <div className="field-hint">C'est l'année qui permet de situer ton édition — pas besoin du jour ni du mois exacts.</div>
+        <div className="field-hint">{t("C'est l'année qui permet de situer ton édition — pas besoin du jour ni du mois exacts.")}</div>
       </div>
 
       <div className="field">
-        <label>Trace FIT <span style={{ color: "var(--brick)" }}>*</span></label>
+        <label>{t("Trace FIT")} <span style={{ color: "var(--brick)" }}>*</span></label>
         <label className="btn image-upload-btn" style={{ display: "inline-flex" }}>
-          {parsing ? "Analyse…" : gpxInfo ? "Remplacer le fichier" : "Charger un fichier .fit"}
+          {parsing ? t("Analyse…") : gpxInfo ? t("Remplacer le fichier") : t("Charger un fichier .fit")}
           <input type="file" accept=".fit,.FIT,application/octet-stream,application/vnd.ant.fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
         </label>
         {gpxInfo && (
           <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
-            ✓ {gpxInfo.distanceKm} km · {gpxInfo.elevationGain.toLocaleString("fr-FR")} D+ · {gpxInfo.points.length} points
+            ✓ {gpxInfo.distanceKm} km · {gpxInfo.elevationGain.toLocaleString(locale())} D+ · {gpxInfo.points.length} points
             {gpxInfo.totalSeconds != null && (
               <>
                 <br />
-                ✓ {formatDuration(gpxInfo.totalSeconds)} au total ·{" "}
-                {formatSpeed(gpxInfo.distanceKm, gpxInfo.totalSeconds)} de moyenne
+                ✓ {t("{d} au total", { d: formatDuration(gpxInfo.totalSeconds) })} ·{" "}
+                {t("{v} de moyenne", { v: formatSpeed(gpxInfo.distanceKm, gpxInfo.totalSeconds) })}
               </>
             )}
             {gpxInfo.totalSeconds == null && (
               <>
                 <br />
-                ⚠ Ce fichier .fit ne contient pas d'horodatage exploitable : les temps ne seront pas enregistrés.
+                ⚠ {t("Ce fichier .fit ne contient pas d'horodatage exploitable : les temps ne seront pas enregistrés.")}
               </>
             )}
           </div>
         )}
         {gpxError && <div className="error-box" style={{ marginTop: 6 }}>{gpxError}</div>}
         <div className="field-hint">
-          Obligatoire — c'est ta trace qui prouve et illustre ta participation. Seul le format .fit est accepté :
-          il garantit l'horodatage nécessaire au calcul des temps. Tu le trouveras dans l'export de ton compteur
-          ou de ta montre (Garmin, Wahoo, Coros…).
+          {t("Obligatoire — c'est ta trace qui prouve et illustre ta participation. Seul le format .fit est accepté : il garantit l'horodatage nécessaire au calcul des temps. Tu le trouveras dans l'export de ton compteur ou de ta montre (Garmin, Wahoo, Coros…).")}
         </div>
       </div>
 
       <div className="field">
-        <label>Notes (optionnel)</label>
-        <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Conditions, ressenti, anecdotes..." />
+        <label>{t("Notes (optionnel)")}</label>
+        <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("Conditions, ressenti, anecdotes...")} />
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
         <button className="btn btn-primary" type="submit" disabled={saving || parsing || !gpxInfo}>
-          {saving ? "Enregistrement…" : "Ajouter au palmarès"}
+          {saving ? t("Enregistrement…") : t("Ajouter au palmarès")}
         </button>
-        <button className="btn" type="button" onClick={onCancel}>Annuler</button>
+        <button className="btn" type="button" onClick={onCancel}>{t("Annuler")}</button>
       </div>
     </form>
   );
@@ -343,7 +342,7 @@ function AddResultForm({ onSaved, onCancel }) {
 // uniquement à l'impression (voir « Passeport Ultra — impression » dans
 // index.css). Le visiteur passe par la boîte d'impression de son navigateur
 // et choisit « Enregistrer au format PDF ».
-const ROLE_LABEL = { participant: "Participant", organizer: "Organisateur", admin: "Administrateur" };
+const ROLE_LABEL = trObj({ participant: "Participant", organizer: "Organisateur", admin: "Administrateur" });
 const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
 function initials(name, email) {
@@ -355,13 +354,13 @@ function initials(name, email) {
 // Le Passeport Ultra (format A4). Utilisé tel quel pour l'impression sur le
 // site et pour le PDF généré dans l'app (src/lib/passportPdf.js).
 export function PassportSheet({ profile, user, results, stats }) {
-  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString(locale(), { day: "numeric", month: "long", year: "numeric" });
   const since = profile?.created_at ? new Date(profile.created_at) : null;
   const name = profile?.display_name || user?.email?.split("@")[0] || "—";
   // Numéro de passeport stable, tiré de l'identifiant du compte.
   const number = (user?.id || "").replace(/-/g, "").slice(0, 8).toUpperCase();
   const countries = new Set(results.map((r) => r.race?.country).filter(Boolean)).size;
-  const fmt = (n) => Math.round(n || 0).toLocaleString("fr-FR");
+  const fmt = (n) => Math.round(n || 0).toLocaleString(locale());
 
   return (
     <div className="print-sheet pp-sheet">
@@ -371,8 +370,8 @@ export function PassportSheet({ profile, user, results, stats }) {
           <span className="pp-tagline">ULTRA-CYCLING ALMANAC</span>
         </div>
         <div className="pp-doc">
-          <span className="pp-doc-title">PASSEPORT ULTRA</span>
-          <span className="pp-doc-meta">N° {number} · délivré le {today}</span>
+          <span className="pp-doc-title">{t("PASSEPORT ULTRA")}</span>
+          <span className="pp-doc-meta">{t("N° {n} · délivré le {d}", { n: number, d: today })}</span>
         </div>
       </header>
 
@@ -380,11 +379,11 @@ export function PassportSheet({ profile, user, results, stats }) {
         <div className="pp-holder-id">
           <div className="pp-initials">{initials(profile?.display_name, user?.email)}</div>
           <div className="pp-holder-text">
-            <span className="pp-label">TITULAIRE</span>
+            <span className="pp-label">{t("TITULAIRE")}</span>
             <span className="pp-name">{name}</span>
             <span className="pp-meta">
-              {[ROLE_LABEL[profile?.role] || "Participant",
-                since ? `membre depuis ${MONTHS[since.getMonth()]} ${since.getFullYear()}` : null,
+              {[ROLE_LABEL[profile?.role] || t("Participant"),
+                since ? t("membre depuis {d}", { d: since.toLocaleDateString(locale(), { month: "long", year: "numeric" }) }) : null,
                 user?.email].filter(Boolean).join(" · ")}
             </span>
           </div>
@@ -395,27 +394,27 @@ export function PassportSheet({ profile, user, results, stats }) {
       </section>
 
       <section className="pp-stats">
-        <div><b>{stats.count}</b><span>ULTRA{stats.count !== 1 ? "S" : ""} TERMINÉ{stats.count !== 1 ? "S" : ""}</span></div>
-        <div><b>{fmt(stats.km)}</b><span>KM CUMULÉS</span></div>
-        <div><b>{fmt(stats.dplus)}</b><span>M DE D+ CUMULÉS</span></div>
-        <div><b>{countries}</b><span>PAYS TRAVERSÉ{countries !== 1 ? "S" : ""}</span></div>
+        <div><b>{stats.count}</b><span>{stats.count !== 1 ? t("ULTRAS TERMINÉS") : t("ULTRA TERMINÉ")}</span></div>
+        <div><b>{fmt(stats.km)}</b><span>{t("KM CUMULÉS")}</span></div>
+        <div><b>{fmt(stats.dplus)}</b><span>{t("M DE D+ CUMULÉS")}</span></div>
+        <div><b>{countries}</b><span>{countries !== 1 ? t("PAYS TRAVERSÉS") : t("PAYS TRAVERSÉ")}</span></div>
       </section>
 
       <section className="pp-results">
-        <span className="pp-label pp-section">RÉALISATIONS</span>
+        <span className="pp-label pp-section">{t("RÉALISATIONS")}</span>
         {results.length === 0 ? (
-          <p className="pp-empty">Aucune réalisation enregistrée.</p>
+          <p className="pp-empty">{t("Aucune réalisation enregistrée.")}</p>
         ) : (
           <table className="pp-table">
             <thead>
               <tr>
-                <th>ANNÉE</th>
-                <th>ÉPREUVE</th>
-                <th>ORGANISATEUR</th>
-                <th className="pp-num">DISTANCE</th>
+                <th>{t("ANNÉE")}</th>
+                <th>{t("ÉPREUVE")}</th>
+                <th>{t("ORGANISATEUR")}</th>
+                <th className="pp-num">{t("DISTANCE")}</th>
                 <th className="pp-num">D+</th>
-                <th className="pp-num">TEMPS</th>
-                <th className="pp-center">TRACE</th>
+                <th className="pp-num">{t("TEMPS")}</th>
+                <th className="pp-center">{t("TRACE")}</th>
               </tr>
             </thead>
             <tbody>
@@ -436,13 +435,9 @@ export function PassportSheet({ profile, user, results, stats }) {
       </section>
 
       <footer className="pp-footer">
-        <span className="pp-footer-title">ATTESTATION</span>
-        <p>
-          Chaque réalisation listée est associée à une trace GPS (.FIT) déposée par le titulaire sur ultraride.eu.
-          Ce passeport résume des déclarations du participant ; il ne remplace pas le classement officiel de
-          l'organisateur.
-        </p>
-        <span className="pp-mono">Édité par ultraride.eu</span>
+        <span className="pp-footer-title">{t("ATTESTATION")}</span>
+        <p>{t("Chaque réalisation listée est associée à une trace GPS (.FIT) déposée par le titulaire sur ultraride.eu. Ce passeport résume des déclarations du participant ; il ne remplace pas le classement officiel de l'organisateur.")}</p>
+        <span className="pp-mono">{t("Édité par ultraride.eu")}</span>
       </footer>
     </div>
   );
@@ -486,7 +481,7 @@ export default function PalmaresSection({ onChange, embedded = false }) {
   }, [results]);
 
   const remove = async (id) => {
-    if (!window.confirm("Retirer ce résultat de ton palmarès ?")) return;
+    if (!window.confirm(t("Retirer ce résultat de ton palmarès ?"))) return;
     await supabase.from("race_results").delete().eq("id", id);
     setOpenTrackId(null);
     load();
@@ -497,19 +492,19 @@ export default function PalmaresSection({ onChange, embedded = false }) {
     <section id="palmares" className="acc-section" aria-labelledby="h-palmares">
       <div className="acc-section-head">
         {/* Dans l'app, l'écran affiche déjà le titre « Palmarès » au-dessus. */}
-        {embedded ? <span id="h-palmares" className="sr-only">Palmarès</span> : <h2 id="h-palmares" className="acc-h2">Palmarès</h2>}
+        {embedded ? <span id="h-palmares" className="sr-only">{t("Palmarès")}</span> : <h2 id="h-palmares" className="acc-h2">{t("Palmarès")}</h2>}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {/* L'impression n'existe pas dans l'app : on y partage une image du passeport à la place. */}
           {!embedded && stats && stats.count > 0 && (
-            <button type="button" className="v2-btn v2-btn-outline acc-btn" onClick={() => window.print()} title="Enregistre ton Passeport Ultra en PDF depuis la fenêtre d'impression">
+            <button type="button" className="v2-btn v2-btn-outline acc-btn" onClick={() => window.print()} title={t("Enregistre ton Passeport Ultra en PDF depuis la fenêtre d'impression")}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6" /><rect x="6" y="14" width="12" height="7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /></svg>
-              Passeport PDF
+              {t("Passeport PDF")}
             </button>
           )}
           {!adding && (
             <button type="button" className="v2-btn v2-btn-rust acc-btn" onClick={() => setAdding(true)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-              Ajouter un ultra terminé
+              {t("Ajouter un ultra terminé")}
             </button>
           )}
         </div>
@@ -523,11 +518,11 @@ export default function PalmaresSection({ onChange, embedded = false }) {
 
       {error && <div className="error-box">{error}</div>}
       {results === null ? (
-        <p className="muted">Chargement…</p>
+        <p className="muted">{t("Chargement…")}</p>
       ) : results.length === 0 ? (
         !adding && (
           <div className="acc-empty">
-            <span>Ajoute tes ultras terminés : dépose le fichier .FIT de ta trace, la distance, le dénivelé et le temps sont lus automatiquement.</span>
+            <span>{t("Ajoute tes ultras terminés : dépose le fichier .FIT de ta trace, la distance, le dénivelé et le temps sont lus automatiquement.")}</span>
           </div>
         )
       ) : (
@@ -541,22 +536,22 @@ export default function PalmaresSection({ onChange, embedded = false }) {
                   <div className="acc-result-main">
                     <span className="acc-result-name">
                       {r.race ? <Link to={`/courses/${r.race.id}`}>{r.race_name}</Link> : r.race_name}
-                      {!r.race && r.race_id === null && <span className="acc-tag">Hors répertoire</span>}
+                      {!r.race && r.race_id === null && <span className="acc-tag">{t("Hors répertoire")}</span>}
                     </span>
                     <span className="acc-result-sub">{[r.organizer_name, r.notes].filter(Boolean).join(" · ")}</span>
                   </div>
                   <div className="acc-result-stats">
-                    <div><span className="v2-label">Distance</span><b>{r.distance_km ? `${Math.round(r.distance_km).toLocaleString("fr-FR")} km` : "—"}</b></div>
-                    <div><span className="v2-label">D+</span><b>{r.elevation_gain ? `${Math.round(r.elevation_gain).toLocaleString("fr-FR")} m` : "—"}</b></div>
-                    <div><span className="v2-label">Temps</span><b>{r.total_seconds != null ? formatDuration(r.total_seconds) : "—"}</b></div>
-                    <div><span className="v2-label">Moyenne</span><b>{r.total_seconds != null ? formatSpeed(r.distance_km, r.total_seconds) : "—"}</b></div>
+                    <div><span className="v2-label">{t("Distance")}</span><b>{r.distance_km ? `${Math.round(r.distance_km).toLocaleString(locale())} km` : "—"}</b></div>
+                    <div><span className="v2-label">D+</span><b>{r.elevation_gain ? `${Math.round(r.elevation_gain).toLocaleString(locale())} m` : "—"}</b></div>
+                    <div><span className="v2-label">{t("Temps")}</span><b>{r.total_seconds != null ? formatDuration(r.total_seconds) : "—"}</b></div>
+                    <div><span className="v2-label">{t("Moyenne")}</span><b>{r.total_seconds != null ? formatSpeed(r.distance_km, r.total_seconds) : "—"}</b></div>
                   </div>
                 </div>
                 <div className="acc-result-actions">
                   <button type="button" className="acc-linkbtn" onClick={() => setOpenTrackId(openTrackId === r.id ? null : r.id)} aria-expanded={openTrackId === r.id}>
-                    {openTrackId === r.id ? "Masquer la trace" : "Voir la trace"}
+                    {openTrackId === r.id ? t("Masquer la trace") : t("Voir la trace")}
                   </button>
-                  <button type="button" className="acc-linkbtn acc-danger" onClick={() => remove(r.id)}>Retirer</button>
+                  <button type="button" className="acc-linkbtn acc-danger" onClick={() => remove(r.id)}>{t("Retirer")}</button>
                 </div>
                 {openTrackId === r.id && (
                   <div style={{ marginTop: 12 }}>

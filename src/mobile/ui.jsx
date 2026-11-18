@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { dateTile, formatNumber, daysUntil, formatDate } from "./data";
 import { isNative } from "../lib/native";
+import { t, LangSwitch, isEn } from "../lib/i18n";
 
 export const DISCIPLINE_BG = {
   Route: "#6E6E66",
@@ -14,7 +15,7 @@ export const DISCIPLINE_BG = {
 export const disciplineBg = (d) => DISCIPLINE_BG[d] || "#1B2B20";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
-export const formatLabel = (f) => FORMAT_LABEL[f] || f;
+export const formatLabel = (f) => t(FORMAT_LABEL[f] || f);
 
 // ── Icônes (traits, currentColor) ─────────────────────────────────────
 const P = {
@@ -121,18 +122,18 @@ export function Stat({ label, value }) {
 
 export function raceStats(race) {
   return [
-    race.km ? { label: "DISTANCE", value: `${formatNumber(race.km)} km` } : null,
+    race.km ? { label: t("DISTANCE"), value: `${formatNumber(race.km)} km` } : null,
     race.dplus ? { label: "D+", value: `${formatNumber(race.dplus)} m` } : null,
-    { label: "DÉPART", value: formatDate(race, { short: true }) },
+    { label: t("DÉPART"), value: formatDate(race, { short: true }) },
   ].filter(Boolean);
 }
 
 export function DateTile({ race }) {
-  const t = dateTile(race);
+  const tile = dateTile(race);
   return (
     <span className="m-datetile" style={{ background: disciplineBg(race.discipline) }}>
-      <span className="m-datetile-big">{t.big}</span>
-      <span className="m-datetile-small">{t.small}</span>
+      <span className="m-datetile-big">{tile.big}</span>
+      <span className="m-datetile-small">{tile.small}</span>
     </span>
   );
 }
@@ -140,14 +141,14 @@ export function DateTile({ race }) {
 function placeLine(race) {
   const from = race.start_place, to = race.end_place;
   const place = from && to && from !== to ? `${from.split(",")[0]} → ${to.split(",")[0]}` : (from || "").split(",")[0];
-  return [place, race.country].filter(Boolean).join(" · ");
+  return [place, t(race.country)].filter(Boolean).join(" · ");
 }
 
 export function RaceRow({ race, isFav, onToggleFav }) {
   const bits = [
     race.km ? `${formatNumber(race.km)} km` : null,
     race.dplus ? `${formatNumber(race.dplus)} m D+` : null,
-    race.price ? `${formatNumber(race.price)} €` : null,
+    race.price ? (isEn() ? `€${formatNumber(race.price)}` : `${formatNumber(race.price)} €`) : null,
   ].filter(Boolean).join(" · ");
   const link = (
     <Link to={`/courses/${race.id}`} className="m-row">
@@ -165,7 +166,7 @@ export function RaceRow({ race, isFav, onToggleFav }) {
   return (
     <div className="m-rowwrap">
       {link}
-      <button type="button" className="m-row-fav" aria-label={isFav ? `Retirer ${race.name} des favoris` : `Ajouter ${race.name} aux favoris`} aria-pressed={!!isFav} onClick={() => onToggleFav(race.id)}>
+      <button type="button" className="m-row-fav" aria-label={isFav ? t("Retirer {name} des favoris", { name: race.name }) : t("Ajouter {name} aux favoris", { name: race.name })} aria-pressed={!!isFav} onClick={() => onToggleFav(race.id)}>
         <Icon name="heart" size={22} fill={isFav ? "#B4541F" : "none"} stroke={isFav ? "#B4541F" : "currentColor"} width={2} />
       </button>
     </div>
@@ -186,11 +187,11 @@ export function MiniCard({ race, extra }) {
             <circle cx={r.start[0]} cy={r.start[1]} r="4" fill="#F5F1E6" />
           </svg>
         )}
-        {daysUntil(race) != null && <span className="m-mini-j">J-{daysUntil(race)}</span>}
+        {daysUntil(race) != null && <span className="m-mini-j">{t("J-{n}", { n: daysUntil(race) })}</span>}
       </span>
       <span className="m-mini-body">
         <span className="m-mini-title">{race.name}</span>
-        <span className="m-mini-sub">{[race.discipline, race.km ? `${formatNumber(race.km)} km` : null].filter(Boolean).join(" · ")}</span>
+        <span className="m-mini-sub">{[t(race.discipline), race.km ? `${formatNumber(race.km)} km` : null].filter(Boolean).join(" · ")}</span>
         <span className="m-mini-sub">{extra || formatDate(race, { short: true })}</span>
       </span>
     </Link>
@@ -226,15 +227,15 @@ export function AccountPrompt() {
       <div className="m-sheet" role="dialog" aria-modal="true" aria-labelledby="m-ask-title" onClick={(e) => e.stopPropagation()}>
         <div className="m-sheet-head">
           <span className="m-ask-icon"><Icon name="heart" size={22} fill="#B4541F" stroke="#B4541F" width={2} /></span>
-          <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Fermer" onClick={close}><Icon name="close" /></button>
+          <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={t("Fermer")} onClick={close}><Icon name="close" /></button>
         </div>
         <div className="m-ask-body">
-          <h2 id="m-ask-title" className="m-h2">Garde tes ultras en favoris</h2>
-          <p>Pour mettre un ultra en favoris, il faut un compte UltraRide. Tu retrouveras ensuite tous tes favoris et leurs dates dans ton Passeport.</p>
+          <h2 id="m-ask-title" className="m-h2">{t("Garde tes ultras en favoris")}</h2>
+          <p>{t("Pour mettre un ultra en favoris, il faut un compte UltraRide. Tu retrouveras ensuite tous tes favoris et leurs dates dans ton Passeport.")}</p>
         </div>
         <div className="m-sheet-foot m-sheet-foot--stack">
-          <Link to={`/login?mode=signup&next=${next}`} className="m-btn m-btn--primary" onClick={close}>Ouvrir un compte</Link>
-          <Link to={`/login?next=${next}`} className="m-btn m-btn--ghost" onClick={close}>J'ai déjà un compte</Link>
+          <Link to={`/login?mode=signup&next=${next}`} className="m-btn m-btn--primary" onClick={close}>{t("Ouvrir un compte")}</Link>
+          <Link to={`/login?next=${next}`} className="m-btn m-btn--ghost" onClick={close}>{t("J'ai déjà un compte")}</Link>
         </div>
       </div>
     </div>
@@ -308,37 +309,38 @@ export function MenuButton({ variant = "light" }) {
 
   return (
     <>
-      <button type="button" className={`m-roundbtn m-roundbtn--${variant}`} aria-label="Menu" aria-expanded={open} onClick={() => setOpen(true)}>
+      <button type="button" className={`m-roundbtn m-roundbtn--${variant}`} aria-label={t("Menu")} aria-expanded={open} onClick={() => setOpen(true)}>
         <Icon name="menu" />
       </button>
       {/* Portail vers <body> : rendu dans l'en-tête collant (backdrop-filter),
           le menu était enfermé dans sa hauteur, sans croix ni fond pour fermer. */}
       {open && createPortal(
         <div className="m-sheet-backdrop" onClick={close}>
-          <div className="m-sheet" role="dialog" aria-label="Menu" onClick={(e) => e.stopPropagation()}>
+          <div className="m-sheet" role="dialog" aria-label={t("Menu")} onClick={(e) => e.stopPropagation()}>
             <div className="m-sheet-head">
               <span className="m-wordmark">ULTRA<span>RIDE</span></span>
-              <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Fermer" onClick={close}><Icon name="close" /></button>
+              <LangSwitch style={{ marginLeft: "auto", marginRight: 10 }} />
+              <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={t("Fermer")} onClick={close}><Icon name="close" /></button>
             </div>
             <nav className="m-sheet-links">
-              <NavLink to="/proposer-course" onClick={close}>Proposer un ultra</NavLink>
-              {isNative && <NavLink to="/notifications" onClick={close}>Notifications</NavLink>}
-              <NavLink to="/le-projet" onClick={close}>Le projet</NavLink>
-              <NavLink to="/mode-d-emploi" onClick={close}>Mode d'emploi</NavLink>
-              {(isOrganizer || isAdmin) && <NavLink to="/organizer/races" onClick={close}>Mes ultras (organisateur)</NavLink>}
-              {(isOrganizer || isAdmin) && <NavLink to="/organizer/profile" onClick={close}>Fiche organisateur</NavLink>}
+              <NavLink to="/proposer-course" onClick={close}>{t("Proposer un ultra")}</NavLink>
+              {isNative && <NavLink to="/notifications" onClick={close}>{t("Notifications")}</NavLink>}
+              <NavLink to="/le-projet" onClick={close}>{t("Le projet")}</NavLink>
+              <NavLink to="/mode-d-emploi" onClick={close}>{t("Mode d'emploi")}</NavLink>
+              {(isOrganizer || isAdmin) && <NavLink to="/organizer/races" onClick={close}>{t("Mes ultras (organisateur)")}</NavLink>}
+              {(isOrganizer || isAdmin) && <NavLink to="/organizer/profile" onClick={close}>{t("Fiche organisateur")}</NavLink>}
               {isAdmin && <NavLink to="/admin" onClick={close}>Admin</NavLink>}
-              <NavLink to="/cgu" onClick={close}>Conditions générales</NavLink>
-              <NavLink to="/confidentialite" onClick={close}>Confidentialité</NavLink>
+              <NavLink to="/cgu" onClick={close}>{t("Conditions générales")}</NavLink>
+              <NavLink to="/confidentialite" onClick={close}>{t("Confidentialité")}</NavLink>
               <a href="mailto:hello@ultraride.eu">Contact</a>
             </nav>
             <div className="m-sheet-foot">
               {user ? (
-                <button type="button" className="m-btn m-btn--ghost" onClick={() => { close(); signOut(); }}>Déconnexion</button>
+                <button type="button" className="m-btn m-btn--ghost" onClick={() => { close(); signOut(); }}>{t("Déconnexion")}</button>
               ) : (
                 <>
-                  <Link to="/login" className="m-btn m-btn--ghost" onClick={close}>Connexion</Link>
-                  <Link to="/login?mode=signup" className="m-btn m-btn--primary" onClick={close}>Créer un compte</Link>
+                  <Link to="/login" className="m-btn m-btn--ghost" onClick={close}>{t("Connexion")}</Link>
+                  <Link to="/login?mode=signup" className="m-btn m-btn--primary" onClick={close}>{t("Créer un compte")}</Link>
                 </>
               )}
             </div>

@@ -8,16 +8,17 @@ import {
   LIST_COLUMNS, DISCIPLINE_COLOR, FORMAT_LABEL, PARCOURS_LABEL,
   normalize, isUpcoming, byStartDate, monthGroup, raceCoords, parseDate, MONTH_NAMES,
 } from "../lib/raceDisplay";
+import { t, tn } from "../lib/i18n";
 
 const DISCIPLINES = ["Route", "Gravel", "VTT"];
 const FORMATS = ["course", "aventure", "endurance"];
 const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
 const MIN_KM = [
-  { value: 0, label: "Toutes les distances" },
-  { value: 300, label: "300 km et plus" },
-  { value: 500, label: "500 km et plus" },
-  { value: 1000, label: "1 000 km et plus" },
-  { value: 2000, label: "2 000 km et plus" },
+  { value: 0, get label() { return t("Toutes les distances"); } },
+  { value: 300, get label() { return t("300 km et plus"); } },
+  { value: 500, get label() { return t("500 km et plus"); } },
+  { value: 1000, get label() { return t("1 000 km et plus"); } },
+  { value: 2000, get label() { return t("2 000 km et plus"); } },
 ];
 const PAGE = 40;
 
@@ -51,30 +52,30 @@ function MonthPicker({ selected, onChange, counts }) {
   }, [open]);
 
   const list = [...selected].sort((a, b) => a - b);
-  const label = list.length === 0 ? "Tous"
-    : list.length <= 2 ? list.map((m) => MONTH_NAMES[m]).join(", ")
-    : `${list.length} mois`;
+  const label = list.length === 0 ? t("Tous")
+    : list.length <= 2 ? list.map((m) => t(MONTH_NAMES[m])).join(", ")
+    : t("{n} mois", { n: list.length });
 
   return (
     <div className="v2-months" ref={ref}>
       <button type="button" className="v2-input v2-months-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        <span className="muted" style={{ fontSize: 14 }}>Mois :</span>
+        <span className="muted" style={{ fontSize: 14 }}>{t("Mois :")}</span>
         <strong>{label}</strong>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
       </button>
       {open && (
-        <div className="v2-months-pop" role="group" aria-label="Mois de départ">
+        <div className="v2-months-pop" role="group" aria-label={t("Mois de départ")}>
           <div className="v2-months-grid">
             {MONTH_NAMES.map((name, i) => (
               <label key={name} className={`v2-month${selected.has(i) ? " on" : ""}${counts[i] ? "" : " empty"}`}>
                 <input type="checkbox" checked={selected.has(i)} onChange={() => onChange(toggleInSet(selected, i))} />
-                <span>{name}</span>
+                <span>{t(name)}</span>
                 <small>{counts[i] || 0}</small>
               </label>
             ))}
           </div>
           <div className="v2-months-foot">
-            <button type="button" className="v2-months-clear" disabled={!selected.size} onClick={() => onChange(new Set())}>Effacer</button>
+            <button type="button" className="v2-months-clear" disabled={!selected.size} onClick={() => onChange(new Set())}>{t("Effacer")}</button>
             <button type="button" className="v2-btn v2-btn-ink" onClick={() => setOpen(false)}>OK</button>
           </div>
         </div>
@@ -144,7 +145,7 @@ export default function Ultras() {
   useEffect(() => { setLimit(PAGE); }, [search, disciplines, formats, minKm, country, mode, parcours, openOnly, months, sort, zoneOnly]);
 
   const countries = useMemo(
-    () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort((a, b) => a.localeCompare(b)) : []),
+    () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort((a, b) => t(a).localeCompare(t(b))) : []),
     [races]
   );
 
@@ -178,7 +179,7 @@ export default function Ultras() {
       if (parcours && r.parcours !== parcours) return false;
       if (openOnly && !r.open) return false;
       if (q) {
-        const hay = normalize([r.name, r.country, r.discipline, r.start_place, r.end_place, r.organizer?.name, r.organizer_name, r.blurb].filter(Boolean).join(" "));
+        const hay = normalize([r.name, r.country, t(r.country), r.discipline, t(r.discipline), r.start_place, r.end_place, r.organizer?.name, r.organizer_name, r.blurb].filter(Boolean).join(" "));
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -211,12 +212,12 @@ export default function Ultras() {
   };
 
   const summary = [
-    `${listed.length} ultra${listed.length !== 1 ? "s" : ""}`,
-    months.size ? [...months].sort((a, b) => a - b).map((m) => MONTH_NAMES[m]).join(", ") : null,
-    disciplines.size ? [...disciplines].join(", ") : null,
+    tn(listed.length, "{n} ultra", "{n} ultras"),
+    months.size ? [...months].sort((a, b) => a - b).map((m) => t(MONTH_NAMES[m])).join(", ") : null,
+    disciplines.size ? [...disciplines].map((d) => t(d)).join(", ") : null,
     formats.size ? [...formats].map((f) => FORMAT_LABEL[f]).join(", ") : null,
-    openOnly ? "inscriptions ouvertes" : null,
-    zoneOnly ? "dans la zone visible" : null,
+    openOnly ? t("inscriptions ouvertes") : null,
+    zoneOnly ? t("dans la zone visible") : null,
   ].filter(Boolean).join(" · ");
 
   const shown = listed.slice(0, limit);
@@ -227,16 +228,16 @@ export default function Ultras() {
     <div className="v2">
       <div className="v2-wrap">
         <div className="v2-ultras-top">
-          <h1>ULTRAS</h1>
+          <h1>{t("ULTRAS")}</h1>
           <label className="v2-input" style={{ flex: "1 1 300px" }}>
             <SearchIcon />
-            <span className="sr-only">Rechercher un ultra</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} onBlur={() => setUrlSearch(search)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Nom, lieu, pays, organisateur…" />
+            <span className="sr-only">{t("Rechercher un ultra")}</span>
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} onBlur={() => setUrlSearch(search)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder={t("Nom, lieu, pays, organisateur…")} />
           </label>
           <MonthPicker selected={months} onChange={setMonths} counts={monthCounts} />
-          <div className="v2-toggle" role="group" aria-label="Affichage">
-            <button type="button" aria-pressed={view === "split"} onClick={() => setView("split")}>Liste<span className="v2-desk-only"> + carte</span></button>
-            <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>Carte<span className="v2-desk-only"> seule</span></button>
+          <div className="v2-toggle" role="group" aria-label={t("Affichage")}>
+            <button type="button" aria-pressed={view === "split"} onClick={() => setView("split")}>{t("Liste")}<span className="v2-desk-only"> {t("+ carte")}</span></button>
+            <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>{t("Carte")}<span className="v2-desk-only"> {t("seule")}</span></button>
           </div>
           <button
             type="button"
@@ -244,34 +245,34 @@ export default function Ultras() {
             aria-expanded={filtersOpen}
             onClick={() => setFiltersOpen((v) => !v)}
           >
-            Filtres{activeCount ? ` · ${activeCount}` : ""}
+            {t("Filtres")}{activeCount ? ` · ${activeCount}` : ""}
           </button>
         </div>
 
         {error && <div className="error-box">{error}</div>}
 
         <div className={`v2-ultras-layout${view === "map" ? " v2-map-only" : ""}`}>
-          <aside className={`v2-filters${filtersOpen ? " v2-filters-open" : ""}`} aria-label="Filtres">
+          <aside className={`v2-filters${filtersOpen ? " v2-filters-open" : ""}`} aria-label={t("Filtres")}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <span className="v2-h3" style={{ fontSize: 12 }}>Filtres{activeCount ? ` · ${activeCount}` : ""}</span>
+              <span className="v2-h3" style={{ fontSize: 12 }}>{t("Filtres")}{activeCount ? ` · ${activeCount}` : ""}</span>
               <button type="button" onClick={reset} style={{ border: "none", background: "none", padding: "8px 0", fontSize: 13, color: "var(--rust-text)", fontWeight: 600 }}>
-                Réinitialiser
+                {t("Réinitialiser")}
               </button>
             </div>
 
             <fieldset>
-              <legend>Discipline</legend>
+              <legend>{t("Discipline")}</legend>
               {DISCIPLINES.map((d) => (
                 <label key={d} className="v2-check">
                   <input type="checkbox" checked={disciplines.has(d)} onChange={() => setDisciplines((s) => toggleInSet(s, d))} />
-                  <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />{d}
+                  <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />{t(d)}
                   <small>{disciplineCounts[d]}</small>
                 </label>
               ))}
             </fieldset>
 
             <fieldset>
-              <legend>Format</legend>
+              <legend>{t("Format")}</legend>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {FORMATS.map((f) => (
                   <button key={f} type="button" className="v2-fchip" aria-pressed={formats.has(f)} onClick={() => setFormats((s) => toggleInSet(s, f))}>
@@ -282,51 +283,51 @@ export default function Ultras() {
             </fieldset>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span className="v2-flabel">Distance</span>
+              <span className="v2-flabel">{t("Distance")}</span>
               <select className="v2-select" value={minKm} onChange={(e) => setMinKm(Number(e.target.value))}>
                 {MIN_KM.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </label>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span className="v2-flabel">Pays</span>
+              <span className="v2-flabel">{t("Pays")}</span>
               <select className="v2-select" value={country} onChange={(e) => setCountry(e.target.value)}>
-                <option value="">Tous les pays ({countries.length})</option>
-                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="">{t("Tous les pays ({n})", { n: countries.length })}</option>
+                {countries.map((c) => <option key={c} value={c}>{t(c)}</option>)}
               </select>
             </label>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span className="v2-flabel">Mode</span>
+              <span className="v2-flabel">{t("Mode")}</span>
               <select className="v2-select" value={mode} onChange={(e) => setMode(e.target.value)}>
-                <option value="">Tous les modes</option>
-                {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+                <option value="">{t("Tous les modes")}</option>
+                {MODES.map((m) => <option key={m} value={m}>{t(m)}</option>)}
               </select>
             </label>
 
             <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span className="v2-flabel">Parcours</span>
+              <span className="v2-flabel">{t("Parcours")}</span>
               <select className="v2-select" value={parcours} onChange={(e) => setParcours(e.target.value)}>
-                <option value="">Tous les parcours</option>
+                <option value="">{t("Tous les parcours")}</option>
                 {Object.entries(PARCOURS_LABEL).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
               </select>
             </label>
 
             <label className="v2-check">
               <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} />
-              Inscriptions ouvertes
+              {t("Inscriptions ouvertes")}
             </label>
           </aside>
 
-          <section className="v2-results" aria-label="Résultats">
+          <section className="v2-results" aria-label={t("Résultats")}>
             <div className="v2-label" style={{ textTransform: "none", fontSize: 12, paddingBottom: 6 }}>
-              {races === null ? "Chargement…" : summary}
+              {races === null ? t("Chargement…") : summary}
             </div>
 
             {races && listed.length === 0 && (
               <div className="v2-geo" style={{ marginTop: 12 }}>
-                <p className="muted" style={{ margin: 0, fontSize: 15 }}>Aucun ultra ne correspond à ces filtres.</p>
-                <button type="button" className="v2-btn v2-btn-outline" onClick={reset}>Réinitialiser</button>
+                <p className="muted" style={{ margin: 0, fontSize: 15 }}>{t("Aucun ultra ne correspond à ces filtres.")}</p>
+                <button type="button" className="v2-btn v2-btn-outline" onClick={reset}>{t("Réinitialiser")}</button>
               </div>
             )}
 
@@ -344,12 +345,12 @@ export default function Ultras() {
 
             {listed.length > shown.length && (
               <button type="button" className="v2-btn v2-btn-outline" style={{ marginTop: 18 }} onClick={() => setLimit((n) => n + PAGE)}>
-                Afficher les {Math.min(PAGE, listed.length - shown.length)} suivants
+                {t("Afficher les {n} suivants", { n: Math.min(PAGE, listed.length - shown.length) })}
               </button>
             )}
           </section>
 
-          <section className="v2-mapcol" aria-label="Carte">
+          <section className="v2-mapcol" aria-label={t("Carte")}>
             <div className="v2-mapbox">
               <UltrasMap
                 races={filtered}
@@ -359,12 +360,12 @@ export default function Ultras() {
               />
               <label className="v2-map-overlay v2-map-zone">
                 <input type="checkbox" checked={zoneOnly} onChange={(e) => setZoneOnly(e.target.checked)} />
-                Filtrer selon la zone visible
+                {t("Filtrer selon la zone visible")}
               </label>
               <div className="v2-map-overlay v2-map-legend">
                 {DISCIPLINES.map((d) => (
                   <span key={d} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />{d}
+                    <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />{t(d)}
                   </span>
                 ))}
               </div>

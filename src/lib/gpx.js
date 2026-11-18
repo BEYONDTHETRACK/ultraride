@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 // Seuil au-delà duquel on considère que le vélo avance. En dessous, le temps
 // est compté comme pause : à l'échelle d'un ultra, un arrêt ravito de 20 min
 // et une heure de sommeil doivent sortir du temps de roulage.
@@ -218,7 +219,7 @@ export function formatDuration(seconds) {
   const days = Math.floor(total / 86400);
   const hours = Math.floor((total % 86400) / 3600);
   const minutes = Math.floor((total % 3600) / 60);
-  if (days > 0) return `${days} j ${String(hours).padStart(2, "0")}h${String(minutes).padStart(2, "0")}`;
+  if (days > 0) return `${days} ${t("j")} ${String(hours).padStart(2, "0")}h${String(minutes).padStart(2, "0")}`;
   if (hours > 0) return `${hours}h${String(minutes).padStart(2, "0")}`;
   return `${minutes} min`;
 }

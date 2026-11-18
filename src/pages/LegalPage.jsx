@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { analyticsEnabled, openConsentBanner } from "../lib/analytics";
+import { isEn } from "../lib/i18n";
 
 function slugify(str) {
   return (str || "")
@@ -41,7 +42,7 @@ const components = {
         : <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
 };
 
-export default function LegalPage({ content, title, className = "" }) {
+export default function LegalPage({ content, title, className = "", frOnly = false }) {
   const { hash } = useLocation();
 
   // Ancre dans l'URL (/cgu#article-7-…) : on descend jusqu'au titre visé,
@@ -61,6 +62,12 @@ export default function LegalPage({ content, title, className = "" }) {
 
   return (
     <div className={`legal-page ${className}`.trim()}>
+      {frOnly && isEn() && (
+        <p className="legal-fr-note" lang="en">
+          This document is only available in French, the language in which it is legally binding.
+          You can translate it with your browser or your phone's translation feature.
+        </p>
+      )}
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>

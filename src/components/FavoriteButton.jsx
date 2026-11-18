@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { t } from "../lib/i18n";
 
 // Small star toggle. Works on race cards and the race detail page. If the
 // visitor isn't logged in, clicking sends them to /login instead of failing.
@@ -42,8 +43,8 @@ export default function FavoriteButton({ raceId, size = 18 }) {
       onClick={toggle}
       disabled={busy}
       className="favorite-btn"
-      aria-label={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
-      title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={isFav ? t("Retirer des favoris") : t("Ajouter aux favoris")}
+      title={isFav ? t("Retirer des favoris") : t("Ajouter aux favoris")}
     >
       <svg width={size} height={size} viewBox="0 0 24 24" fill={isFav ? "#C4622D" : "none"} stroke="#C4622D" strokeWidth="1.8">
         <path d="M12 3l2.7 5.9 6.3.6-4.7 4.4 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.5l6.3-.6L12 3z" strokeLinejoin="round" />
