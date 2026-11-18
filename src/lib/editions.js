@@ -7,7 +7,7 @@ const COPIED_COLUMNS = [
   "name", "country", "discipline", "format", "mode", "parcours", "month", "km", "dplus",
   "lat", "lon", "start_lat", "start_lon", "end_lat", "end_lon", "turn_lat", "turn_lon",
   "start_place", "end_place", "organizer_name", "organizer_id", "terrain",
-  "blurb", "long_blurb", "image_url", "registration_url", "event_name", "event_slug",
+  "blurb", "blurb_en", "long_blurb", "image_url", "registration_url", "event_name", "event_slug",
   "price", "created_by",
 ];
 

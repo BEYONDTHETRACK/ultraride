@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getFlagEmoji } from "../lib/emea";
-import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
-import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
+import EN from "../lib/i18n.en";
 
 // Vignette Instagram 4:5. Tout est dessiné en Canvas 2D natif : aucune
 // dépendance, et le PNG exporté a la résolution réelle (1080 × 1350).
@@ -23,7 +22,12 @@ const COLORS = {
   // Équivalents opaques des badges .badge-published / .badge-rejected sur fond blanc.
   openBg: "#C5DECF",
   closedBg: "#F1D9D5",
+  cream: "#EFE8D0",
+  amber: "#F0A43A",
 };
+
+// Icône de l'app (U orange, R vert sur fond noir), servie par le site.
+const APP_ICON_URL = "/ig-app-icon.png";
 
 const DISP = "Anton, sans-serif";
 const SANS = "'IBM Plex Sans', sans-serif";
@@ -32,17 +36,14 @@ const EMOJI = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-s
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 
-// Fond autour de la carte : une couleur par pratique (Route = vert foncé,
-// Gravel = vert, VTT = rouille) ; le parchemin reste dispo à la main.
+// Fond de la moitié basse : une couleur par pratique (Route = vert foncé,
+// Gravel = vert, VTT = rouille). Texte crème dans tous les cas.
 export const FRAMES = {
-  dark: { label: "Vert foncé", bg: "#1B2B20", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.35)" },
-  green: { label: "Vert", bg: "#15793F", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
-  rust: { label: "Rouille", bg: "#C4622D", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
-  parchment: { label: "Parchemin", bg: "#F5F1E6", sign: "#C4622D", shadow: "rgba(27,43,32,0.14)" },
+  dark: { label: "Vert foncé", bg: "#1B2B20" },
+  green: { label: "Vert", bg: "#15793F" },
+  rust: { label: "Rouille", bg: "#9E4A20" },
 };
 export const FRAME_BY_DISCIPLINE = { Route: "dark", Gravel: "green", VTT: "rust" };
-
-const CARD = { x: 80, y: 64, w: 920, h: 1150, r: 48, pad: 48 };
 
 function normalize(str) {
   return (str || "")
@@ -169,17 +170,18 @@ function wrapText(ctx, text, maxWidth, maxLines) {
 function drawPill(ctx, text, x, y, colors) {
   const {
     bg, fg, border, borderWidth = 0, font, height, padX,
-    radius = height / 2, letterSpacing = 0, shadow = false, align = "left", emoji = null,
+    radius = height / 2, letterSpacing = 0, shadow = false, align = "left", emoji = null, lead = null,
   } = colors;
 
   ctx.save();
   const emojiFont = `${Math.round(height * 0.44)}px ${EMOJI}`;
   ctx.font = emojiFont;
   const emojiW = emoji ? ctx.measureText(emoji).width + 8 : 0;
+  const leadW = lead ? ctx.measureText(lead).width + 10 : 0;
   ctx.font = font;
   setLetterSpacing(ctx, letterSpacing);
   const textW = ctx.measureText(text).width;
-  const w = Math.ceil(textW + emojiW + padX * 2);
+  const w = Math.ceil(textW + emojiW + leadW + padX * 2);
   const left = align === "right" ? x - w : x;
 
   roundRect(ctx, left, y, w, height, radius);
@@ -202,7 +204,16 @@ function drawPill(ctx, text, x, y, colors) {
   ctx.fillStyle = fg;
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  ctx.fillText(text, left + padX, y + height / 2 + cap / 2);
+  ctx.fillText(text, left + padX + leadW, y + height / 2 + cap / 2);
+  if (lead) {
+    ctx.save();
+    ctx.shadowColor = "transparent";
+    setLetterSpacing(ctx, 0);
+    ctx.font = emojiFont;
+    ctx.textBaseline = "middle";
+    ctx.fillText(lead, left + padX, y + height / 2 + 1);
+    ctx.restore();
+  }
   if (emoji) {
     ctx.shadowColor = "transparent";
     setLetterSpacing(ctx, 0);
@@ -296,294 +307,294 @@ function drawFallbackName(ctx, name, x, y, w, h) {
   ctx.restore();
 }
 
-export async function renderRacecard(canvas, race, frameKey = "parchment") {
-  const frame = FRAMES[frameKey] || FRAMES.parchment;
+export async function renderRacecard(canvas, race, frameKey = "dark") {
+  const frame = FRAMES[frameKey] || FRAMES.dark;
   await loadFonts();
-  const [image, logo] = await Promise.all([
+  const [image, logo, appIcon] = await Promise.all([
     loadImage(race.image_url),
     loadImage(race.organizer?.logo_url),
+    loadImage(APP_ICON_URL),
   ]);
 
+  // blockers : empêchent l'export (vignette incomplète). warnings : simple info.
+  const blockers = [];
   const warnings = [];
-  if (race.image_url && !image) {
-    warnings.push("L'image de l'ultra n'a pas pu être chargée (CORS ou URL cassée) : le nom est affiché à la place.");
-  }
+  if (!race.image_url) blockers.push("Ajoute un visuel à l'ultra : la vignette en a besoin (au moins la moitié de la carte).");
+  else if (!image) blockers.push("Le visuel de l'ultra n'a pas pu être chargé (CORS ou URL cassée).");
+  if (!race.blurb?.trim()) blockers.push("Ajoute la description courte en français.");
+  if (!race.blurb_en?.trim()) blockers.push("Ajoute la description courte en anglais (champ ci-dessous).");
   if (race.organizer?.logo_url && !logo) {
-    warnings.push("Le logo de l'organisateur n'a pas pu être chargé : seul son nom est affiché.");
+    warnings.push("Le logo de l'organisateur n'a pas pu être chargé : il n'apparaît pas à côté du nom.");
   }
 
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, W, H);
-
-  // Fond (couleur de la pratique)
   ctx.fillStyle = frame.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Carte blanche avec ombre légère
-  ctx.save();
-  ctx.shadowColor = frame.shadow;
-  ctx.shadowBlur = 48;
-  ctx.shadowOffsetY = 14;
-  roundRect(ctx, CARD.x, CARD.y, CARD.w, CARD.h, CARD.r);
-  ctx.fillStyle = COLORS.card;
-  ctx.fill();
-  ctx.restore();
-  roundRect(ctx, CARD.x + 1, CARD.y + 1, CARD.w - 2, CARD.h - 2, CARD.r - 1);
-  ctx.strokeStyle = COLORS.line;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  const PAD = 60;
+  const x0 = PAD;
+  const innerW = W - PAD * 2;
+  const right = W - PAD;
 
-  const x0 = CARD.x + CARD.pad;
-  const innerW = CARD.w - CARD.pad * 2;
-  const right = x0 + innerW;
-  const bottom = CARD.y + CARD.h;
-
-  // Zone image
-  const imgY = CARD.y + CARD.pad;
-  const imgH = Math.round(CARD.h * 0.37);
-  ctx.save();
-  roundRect(ctx, x0, imgY, innerW, imgH, 24);
+  // --- Visuel : la moitié haute de la carte, image entière ---
+  const VIS_H = H / 2 + 5; // 680 px
   ctx.fillStyle = COLORS.imageBg;
-  ctx.fill();
-  ctx.clip();
-  if (image) drawImageContain(ctx, image, x0, imgY, innerW, imgH);
-  else drawFallbackName(ctx, race.name, x0, imgY, innerW, imgH);
-  ctx.restore();
+  ctx.fillRect(0, 0, W, VIS_H);
+  if (image) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W, VIS_H);
+    ctx.clip();
+    drawImageContain(ctx, image, 0, 112, W, VIS_H - 112 - 20);
+    ctx.restore();
+  } else {
+    drawFallbackName(ctx, race.name, 0, 112, W, VIS_H - 132);
+  }
 
-  // --- Pile du bas, ancrée sur le bas de la carte ---
-  const orgName = organizerName(race);
-  const orgHandle = toInstagramHandle(race.organizer?.instagram);
-  const footerH = 108;
-  const footerLineY = bottom - footerH;
-  const formatH = 50;
-  const formatY = footerLineY - 30 - formatH;
-  const statsH = 44;
-  const statsY = formatY - 24 - statsH;
-  const dashY = statsY - 22;
-
-  // --- Ligne de méta ---
-  let y = imgY + imgH + 34;
-  const metaH = 46;
-  const metaMid = y + metaH / 2;
-  let mx = x0;
-
+  // Badges posés sur le haut du visuel
+  const pillY = 36;
+  const pillStyle = {
+    bg: COLORS.ink, fg: COLORS.cream, font: `600 21px ${MONO}`, height: 44, padX: 18, radius: 8, letterSpacing: 2.5,
+  };
+  let px = 40;
   const flag = getFlagEmoji(race.country);
-  if (flag) {
-    ctx.save();
-    ctx.font = `34px ${EMOJI}`;
-    ctx.textBaseline = "middle";
-    ctx.fillText(flag, mx, metaMid + 2);
-    mx += ctx.measureText(flag).width + 12;
-    ctx.restore();
+  if (race.country || flag) {
+    px += drawPill(ctx, (race.country || "").toUpperCase(), px, pillY, { ...pillStyle, lead: flag }) + 16;
   }
-  if (race.country) {
-    ctx.save();
-    ctx.font = `600 26px ${MONO}`;
-    setLetterSpacing(ctx, 2.5);
-    ctx.fillStyle = COLORS.moss;
-    const cap = ctx.measureText("H").actualBoundingBoxAscent || 18;
-    const label = race.country.toUpperCase();
-    ctx.fillText(label, mx, metaMid + cap / 2);
-    mx += ctx.measureText(label).width + 18;
-    ctx.restore();
-  }
-
-  // Badge ouvert / fermé à droite (dessiné avant la discipline pour connaître la place restante)
-  const statusW = drawPill(ctx, race.open ? "OUVERT" : "FERMÉ", right, y + 3, {
-    bg: race.open ? COLORS.openBg : COLORS.closedBg,
-    fg: race.open ? COLORS.moss : COLORS.brick,
-    font: `500 22px ${MONO}`,
-    height: 40,
-    padX: 18,
-    radius: 6,
-    letterSpacing: 1.5,
+  const kind = [race.discipline, FORMAT_LABEL[race.format] || race.format].filter(Boolean).join(" · ").toUpperCase();
+  const statusLabel = race.open ? "OUVERT · OPEN" : "FERMÉ · CLOSED";
+  const statusW = drawPill(ctx, statusLabel, W - 40, pillY, {
+    ...pillStyle,
+    bg: race.open ? COLORS.amber : COLORS.brick,
+    fg: race.open ? COLORS.ink : COLORS.cream,
     align: "right",
   });
-
-  if (race.discipline && mx < right - statusW - 140) {
-    const color = DISCIPLINE_COLORS[race.discipline] || "#6E6E66";
-    drawPill(ctx, race.discipline.toUpperCase(), mx, y + 2, {
-      bg: `${color}E6`,
-      fg: "#FFFFFF",
-      border: darken(color, 0.25),
-      borderWidth: 4,
-      font: `600 22px ${SANS}`,
-      height: 42,
-      padX: 20,
-      letterSpacing: 1,
-      shadow: true,
-    });
+  if (kind) {
+    ctx.save();
+    ctx.font = pillStyle.font;
+    setLetterSpacing(ctx, pillStyle.letterSpacing);
+    const kw = ctx.measureText(kind).width + pillStyle.padX * 2;
+    ctx.restore();
+    if (px + kw < W - 40 - statusW - 16) drawPill(ctx, kind, px, pillY, pillStyle);
   }
-  y += metaH + 22;
 
-  // --- Nom de l'ultra : 2 lignes max, taille réduite si nécessaire ---
+  // --- Logo organisateur + nom de l'ultra ---
+  let y = VIS_H + 22;
+  let tx = x0;
+  const LOGO = 76;
+  if (logo) {
+    ctx.save();
+    roundRect(ctx, x0, y, LOGO, LOGO, 16);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.clip();
+    drawImageCover(ctx, logo, x0, y, LOGO, LOGO);
+    ctx.restore();
+    roundRect(ctx, x0 + 2, y + 2, LOGO - 4, LOGO - 4, 14);
+    ctx.strokeStyle = COLORS.cream;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    tx = x0 + LOGO + 24;
+  }
   ctx.save();
-  ctx.fillStyle = COLORS.ink;
+  ctx.fillStyle = "#FFFFFF";
   ctx.textBaseline = "alphabetic";
   setLetterSpacing(ctx, 0.5);
-  let titleSize = 76;
+  let titleSize = 80;
   let title;
   for (;;) {
     ctx.font = `400 ${titleSize}px ${DISP}`;
-    title = wrapText(ctx, (race.name || "").toUpperCase(), innerW, 2);
+    title = wrapText(ctx, (race.name || "").toUpperCase(), right - tx, 1);
     if (!title.truncated || titleSize <= 50) break;
     titleSize -= 4;
   }
-  const titleLH = Math.round(titleSize * 1.12);
   const titleCap = ctx.measureText("H").actualBoundingBoxAscent || titleSize * 0.75;
-  title.lines.forEach((line, i) => ctx.fillText(line, x0, y + titleCap + i * titleLH));
+  const titleBase = y + LOGO / 2 + titleCap / 2;
+  ctx.fillText(title.lines[0] || "", tx, titleBase);
   ctx.restore();
-  y += titleCap + (title.lines.length - 1) * titleLH + 30;
+  y += LOGO + 22;
 
-  // --- Description courte : 4 lignes max, limitée par la place restante ---
-  if (race.blurb && race.blurb.trim()) {
-    ctx.save();
-    ctx.font = `400 30px ${SANS}`;
-    ctx.fillStyle = COLORS.blurb;
-    ctx.textBaseline = "top";
-    const lh = 44;
-    const fit = Math.floor((dashY - 18 - y) / lh);
-    const maxLines = Math.max(0, Math.min(4, fit));
-    if (maxLines > 0) {
-      const { lines } = wrapText(ctx, race.blurb, innerW, maxLines);
-      lines.forEach((line, i) => ctx.fillText(line, x0, y + i * lh));
-    }
-    ctx.restore();
-  }
-
-  // --- Séparateur pointillé ---
+  // --- Bande chiffres : distance, dénivelé, date ---
+  const BAND_H = 146;
+  const colW = innerW / 3;
   ctx.save();
-  ctx.setLineDash([10, 8]);
-  ctx.strokeStyle = COLORS.line;
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(239,232,208,0.35)";
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x0, dashY);
-  ctx.lineTo(right, dashY);
+  ctx.moveTo(x0, y); ctx.lineTo(right, y);
+  ctx.moveTo(x0, y + BAND_H); ctx.lineTo(right, y + BAND_H);
+  ctx.moveTo(x0 + colW, y); ctx.lineTo(x0 + colW, y + BAND_H);
+  ctx.moveTo(x0 + colW * 2, y); ctx.lineTo(x0 + colW * 2, y + BAND_H);
   ctx.stroke();
   ctx.restore();
 
-  // --- Stats ---
-  ctx.save();
-  ctx.textBaseline = "alphabetic";
-  const statsBase = statsY + statsH - 8;
-  let sx = x0;
-  const stat = (value, unit) => {
-    if (!value) return;
-    ctx.font = `600 36px ${MONO}`;
-    ctx.fillStyle = COLORS.ink;
-    ctx.fillText(value, sx, statsBase);
-    sx += ctx.measureText(value).width + 10;
-    ctx.font = `500 24px ${MONO}`;
-    ctx.fillStyle = COLORS.dim;
-    ctx.fillText(unit, sx, statsBase);
-    sx += ctx.measureText(unit).width + 44;
-  };
-  stat(formatThousands(race.km), "km");
-  stat(formatThousands(race.dplus), "D+");
-  if (race.month) {
-    ctx.font = `500 26px ${MONO}`;
-    ctx.fillStyle = COLORS.dim;
-    ctx.textAlign = "right";
-    ctx.fillText(race.month, right, statsBase);
-  }
-  ctx.restore();
-
-  // --- Badge format ---
-  if (race.format) {
-    const label = FORMAT_LABEL[race.format] || race.format;
-    const color = FORMAT_COLORS[label] || "#6E6E66";
-    const emoji = FORMAT_EMOJI[label];
-    drawPill(ctx, label.toUpperCase(), x0, formatY, {
-      bg: color,
-      fg: "#FFFFFF",
-      border: darken(color, 0.25),
-      borderWidth: 4,
-      font: `600 24px ${SANS}`,
-      height: formatH,
-      padX: 22,
-      letterSpacing: 1,
-      shadow: true,
-      emoji,
-    });
-  }
-
-  // --- Pied de carte : organisateur ---
-  if (orgName || logo || orgHandle) {
+  const year = race.start_date ? String(race.start_date).slice(0, 4) : null;
+  const monthFr = race.month ? [race.month.toUpperCase(), year].filter(Boolean).join(" ") : null;
+  const monthEn = race.month ? [EN[race.month] || race.month, year].filter(Boolean).join(" ") : null;
+  const km = formatThousands(race.km);
+  const dplus = formatThousands(race.dplus);
+  const cells = [
+    { label: "DISTANCE", value: km, unit: "KM" },
+    { label: "DÉNIVELÉ · ELEVATION", value: dplus, unit: "M D+" },
+    { label: "DATE", value: monthFr, sub: monthEn },
+  ];
+  cells.forEach((c, i) => {
+    const cx = x0 + colW * i + (i ? 28 : 0);
+    const maxW = colW - (i ? 40 : 12);
     ctx.save();
-    ctx.strokeStyle = COLORS.line;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(CARD.x, footerLineY);
-    ctx.lineTo(CARD.x + CARD.w, footerLineY);
-    ctx.stroke();
-
-    const mid = footerLineY + (footerH) / 2;
-    let fx = x0;
-    if (logo) {
-      const s = 60;
-      ctx.save();
-      roundRect(ctx, fx, mid - s / 2, s, s, 14);
-      ctx.fillStyle = "#E5DCC3";
-      ctx.fill();
-      ctx.clip();
-      drawImageCover(ctx, logo, fx, mid - s / 2, s, s);
-      ctx.restore();
-      roundRect(ctx, fx + 1, mid - s / 2 + 1, s - 2, s - 2, 13);
-      ctx.strokeStyle = COLORS.line;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      fx += s + 20;
+    ctx.textBaseline = "alphabetic";
+    ctx.font = `500 18px ${MONO}`;
+    setLetterSpacing(ctx, 2.5);
+    ctx.fillStyle = COLORS.amber;
+    ctx.fillText(c.label, cx, y + 40);
+    setLetterSpacing(ctx, 0);
+    ctx.fillStyle = "#FFFFFF";
+    const base = y + 104;
+    if (!c.value) {
+      ctx.font = `400 56px ${DISP}`;
+      ctx.fillText("—", cx, base);
+    } else {
+      let size = 58;
+      ctx.font = `400 ${size}px ${DISP}`;
+      const unitW = () => (c.unit ? (ctx.font = `400 ${Math.round(size * 0.55)}px ${DISP}`, ctx.measureText(c.unit).width + 10) : 0);
+      for (;;) {
+        ctx.font = `400 ${size}px ${DISP}`;
+        const vw = ctx.measureText(c.value).width;
+        if (vw + unitW() <= maxW || size <= 36) break;
+        size -= 2;
+      }
+      ctx.font = `400 ${size}px ${DISP}`;
+      ctx.fillText(c.value, cx, base);
+      const vw = ctx.measureText(c.value).width;
+      if (c.unit) {
+        ctx.font = `400 ${Math.round(size * 0.55)}px ${DISP}`;
+        ctx.fillText(c.unit, cx + vw + 10, base);
+      }
     }
-    // Avec un compte Instagram, le nom remonte et le @compte se place dessous.
-    const maxW = right - fx;
-    const fit = (text) => (ctx.measureText(text).width > maxW ? ellipsize(ctx, text, maxW) : text);
-    ctx.textBaseline = "middle";
-    if (orgName) {
-      ctx.font = `600 28px ${SANS}`;
-      ctx.fillStyle = COLORS.dim;
-      ctx.fillText(fit(orgName), fx, orgHandle ? mid - 16 : mid + 1);
-    }
-    if (orgHandle) {
-      ctx.font = `500 26px ${MONO}`;
-      ctx.fillStyle = COLORS.rust;
-      ctx.fillText(fit(orgHandle), fx, orgName ? mid + 20 : mid + 1);
+    if (c.sub) {
+      ctx.font = `500 20px ${MONO}`;
+      ctx.fillStyle = COLORS.cream;
+      ctx.fillText(c.sub, cx, y + 134);
     }
     ctx.restore();
-  }
+  });
+  y += BAND_H + 28;
 
-  // --- Signature de marque ---
+  // --- Pied : organisateur à gauche, marque + icône de l'app à droite ---
+  const ICON = 80;
+  const footerMid = H - 30 - ICON / 2;
+  const footerTop = footerMid - ICON / 2 - 16;
+
+  // --- Textes FR / EN : 30 px, partage des lignes disponibles ---
+  const LH = 44;
+  const GAP = 16;
+  const labelW = 100;
+  const textW = innerW - labelW;
   ctx.save();
-  ctx.font = `400 46px ${DISP}`;
-  setLetterSpacing(ctx, 6);
-  ctx.fillStyle = frame.sign;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("ULTRARIDE.EU", W / 2 + 3, bottom + (H - bottom) / 2 + 2);
+  ctx.font = `400 30px ${SANS}`;
+  const fr = race.blurb?.trim() || "";
+  const en = race.blurb_en?.trim() || "";
+  const need = (txt) => (txt ? wrapText(ctx, txt, textW, 10).lines.length : 0);
+  const maxTotal = Math.max(0, Math.floor((footerTop - y - (fr && en ? GAP : 0)) / LH));
+  const needFr = need(fr);
+  const needEn = need(en);
+  let linesEn = Math.min(needEn, Math.max(en ? 1 : 0, Math.floor(maxTotal / 2)));
+  let linesFr = Math.min(needFr, maxTotal - linesEn);
+  linesEn = Math.min(needEn, maxTotal - linesFr);
+  const block = (txt, n, tag, flagEmoji) => {
+    if (!txt || n <= 0) return;
+    ctx.font = `400 30px ${SANS}`;
+    ctx.fillStyle = COLORS.cream;
+    ctx.textBaseline = "top";
+    const { lines } = wrapText(ctx, txt, textW, n);
+    lines.forEach((line, i) => ctx.fillText(line, x0 + labelW, y + i * LH));
+    // étiquette drapeau + code langue
+    ctx.font = `26px ${EMOJI}`;
+    ctx.fillText(flagEmoji, x0, y + 6);
+    const fw = ctx.measureText(flagEmoji).width;
+    ctx.font = `600 20px ${MONO}`;
+    ctx.fillStyle = COLORS.amber;
+    ctx.fillText(tag, x0 + fw + 10, y + 10);
+    y += lines.length * LH + GAP;
+  };
+  block(fr, linesFr, "FR", "🇫🇷");
+  block(en, linesEn, "EN", "🇬🇧");
   ctx.restore();
 
-  return warnings;
+  const orgName = organizerName(race);
+  const orgHandle = toInstagramHandle(race.organizer?.instagram);
+  ctx.save();
+  ctx.textBaseline = "middle";
+  ctx.font = `400 40px ${DISP}`;
+  setLetterSpacing(ctx, 2.4);
+  const brandW = ctx.measureText("ULTRARIDE.EU").width;
+  const iconX = right - ICON;
+  ctx.fillStyle = COLORS.cream;
+  ctx.textAlign = "right";
+  ctx.fillText("ULTRARIDE.EU", iconX - 22, footerMid + 2);
+  ctx.textAlign = "left";
+  setLetterSpacing(ctx, 0);
+  if (appIcon) {
+    ctx.save();
+    roundRect(ctx, iconX, footerMid - ICON / 2, ICON, ICON, 18);
+    ctx.fillStyle = "#0A0A0A";
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(appIcon, iconX, footerMid - ICON / 2, ICON, ICON);
+    ctx.restore();
+    roundRect(ctx, iconX + 1.5, footerMid - ICON / 2 + 1.5, ICON - 3, ICON - 3, 17);
+    ctx.strokeStyle = "rgba(255,255,255,0.75)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+  const leftMax = iconX - 22 - brandW - 30 - x0;
+  const who = orgHandle || orgName;
+  if (who && leftMax > 120) {
+    ctx.font = `500 22px ${MONO}`;
+    ctx.fillStyle = COLORS.cream;
+    const lead = "Organisé par · Hosted by ";
+    const leadW = ctx.measureText(lead).width;
+    if (leadW + 80 <= leftMax) {
+      ctx.fillText(lead, x0, footerMid);
+      ctx.font = `600 22px ${MONO}`;
+      ctx.fillStyle = COLORS.amber;
+      const rest = leftMax - leadW;
+      ctx.fillText(ctx.measureText(who).width > rest ? ellipsize(ctx, who, rest) : who, x0 + leadW, footerMid);
+    } else {
+      ctx.font = `600 22px ${MONO}`;
+      ctx.fillStyle = COLORS.amber;
+      ctx.fillText(ctx.measureText(who).width > leftMax ? ellipsize(ctx, who, leftMax) : who, x0, footerMid);
+    }
+  }
+  ctx.restore();
+
+  return { warnings, blockers };
 }
 
 /* ---------- légende ---------- */
 
 function buildCaption(race) {
-  const flag = getFlagEmoji(race.country);
   const handle = toInstagramHandle(race.organizer?.instagram);
-  // Le @compte en tête notifie l'organisateur, qui peut repartager.
-  const first = [flag, handle, race.blurb?.trim()].filter(Boolean).join(" ");
-
+  const tr = (v) => (v ? EN[v] || v : v);
   const km = formatThousands(race.km);
   const dplus = formatThousands(race.dplus);
-  const where = [
-    race.country,
-    km && `${km} km`,
-    dplus && `${dplus} m D+`,
-    race.month,
-  ].filter(Boolean).join(" · ");
-  const what = [race.discipline, race.mode].filter(Boolean).join(" · ");
+  const year = race.start_date ? String(race.start_date).slice(0, 4) : null;
+  const facts = (lang) => {
+    const L = lang === "en" ? tr : (v) => v;
+    const where = [
+      L(race.country),
+      km && `${km} km`,
+      dplus && `${dplus} m D+`,
+      race.month && [L(race.month), year].filter(Boolean).join(" "),
+    ].filter(Boolean).join(" · ");
+    const what = [L(race.discipline), L(race.mode)].filter(Boolean).join(" · ");
+    return [where && `📍 ${where}`, what && `🚴 ${what}`].filter(Boolean).join("\n");
+  };
 
-  // Sans compte Instagram, pas de ligne organisateur du tout.
-  const org = handle ? `Organisé par ${handle}` : null;
+  // Le @compte en tête notifie l'organisateur, qui peut repartager.
+  const fr = ["🇫🇷", handle, race.blurb?.trim()].filter(Boolean).join(" ");
+  const en = race.blurb_en?.trim() ? `🇬🇧 ${race.blurb_en.trim()}` : null;
 
   // 5 hashtags max (limite Instagram), #UltraRide en premier, puis selon la pratique.
   const isBrm = /\bBRM\b/i.test(race.name || "");
@@ -596,11 +607,12 @@ function buildCaption(race) {
     .slice(0, 5).join(" ");
 
   const blocks = [
-    first,
-    [where && `📍 ${where}`, what && `🚴 ${what}`].filter(Boolean).join("\n"),
-    org,
+    [fr, facts("fr")].filter(Boolean).join("\n"),
+    en && [en, facts("en")].filter(Boolean).join("\n"),
+    // Sans compte Instagram, pas de ligne organisateur du tout.
+    handle && `Organisé par · Hosted by ${handle}`,
     // Pas d'URL dans les légendes (non cliquable sur Instagram) : on renvoie à la bio.
-    "👉 Toutes les infos : lien en bio",
+    "👉 Toutes les infos · Full details : lien en bio · link in bio",
     tags,
   ];
   return blocks.filter(Boolean).join("\n\n");
@@ -646,6 +658,11 @@ export default function InstagramGenerator() {
   const [selectedId, setSelectedId] = useState(null);
   const [rendering, setRendering] = useState(false);
   const [warnings, setWarnings] = useState([]);
+  const [blockers, setBlockers] = useState([]);
+  const [enInput, setEnInput] = useState("");
+  const [enSaving, setEnSaving] = useState(false);
+  const [enError, setEnError] = useState(null);
+  const [enSaved, setEnSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [copied, setCopied] = useState(false);
   const [posts, setPosts] = useState({});
@@ -783,9 +800,33 @@ export default function InstagramGenerator() {
     setIgSaved(true);
   };
 
+  // Description anglaise de la vignette : enregistrée dans races.blurb_en.
+  const selectedBlurbEn = selected?.blurb_en || "";
+  useEffect(() => {
+    setEnInput(selectedBlurbEn);
+    setEnError(null);
+    setEnSaved(false);
+  }, [selectedId, selectedBlurbEn]);
+
+  const saveBlurbEn = async () => {
+    if (!selected) return;
+    const value = enInput.trim() || null;
+    setEnSaving(true);
+    setEnError(null);
+    setEnSaved(false);
+    const { error } = await supabase.from("races").update({ blurb_en: value }).eq("id", selected.id);
+    setEnSaving(false);
+    if (error) {
+      setEnError(error.message);
+      return;
+    }
+    setRaces((list) => list.map((r) => (r.id === selected.id ? { ...r, blurb_en: value } : r)));
+    setEnSaved(true);
+  };
+
   // Couleur proposée : celle de la pratique de l'ultra. Modifiable à la main
   // avec les pastilles.
-  const suggestedFrame = FRAME_BY_DISCIPLINE[selected?.discipline] || "parchment";
+  const suggestedFrame = FRAME_BY_DISCIPLINE[selected?.discipline] || "dark";
   const currentFrame = frameKey || suggestedFrame;
 
   useEffect(() => {
@@ -795,15 +836,16 @@ export default function InstagramGenerator() {
     setCopied(false);
     setRendering(true);
     setWarnings([]);
+    setBlockers([]);
     renderRacecard(canvasRef.current, selected, currentFrame)
-      .then((w) => { if (seq === renderSeq.current) setWarnings(w); })
-      .catch((e) => { if (seq === renderSeq.current) setWarnings([`Erreur de rendu : ${e.message}`]); })
+      .then((r) => { if (seq === renderSeq.current) { setWarnings(r.warnings); setBlockers(r.blockers); } })
+      .catch((e) => { if (seq === renderSeq.current) setBlockers([`Erreur de rendu : ${e.message}`]); })
       .finally(() => { if (seq === renderSeq.current) setRendering(false); });
   }, [selected, currentFrame]);
 
   const download = () => {
     const canvas = canvasRef.current;
-    if (!canvas || !selected) return;
+    if (!canvas || !selected || blockers.length) return;
     try {
       canvas.toBlob((blob) => {
         if (!blob) { setError("L'export PNG a échoué."); return; }
@@ -937,13 +979,46 @@ export default function InstagramGenerator() {
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "12px 0" }}>
-              <button className="btn btn-primary" onClick={download} disabled={rendering}>
+              <button className="btn btn-primary" onClick={download} disabled={rendering || blockers.length > 0}>
                 Télécharger PNG
               </button>
               <span className="muted mono" style={{ fontSize: 11 }}>
                 {rendering ? "Rendu en cours…" : `${W} × ${H} px`}
               </span>
             </div>
+            {blockers.map((b) => (
+              <p key={b} className="field-hint" style={{ color: "var(--brick)", margin: "0 0 6px" }}>✕ {b}</p>
+            ))}
+            {selected && (
+              <div className="field" style={{ maxWidth: 560, marginBottom: 12 }}>
+                <label htmlFor="ig-blurb-en">Description courte en anglais 🇬🇧</label>
+                <div className="field-hint" style={{ marginBottom: 6 }}>
+                  🇫🇷 {selected.blurb || "—"} ({(selected.blurb || "").length} car.)
+                </div>
+                <textarea
+                  id="ig-blurb-en"
+                  rows={3}
+                  value={enInput}
+                  onChange={(e) => { setEnInput(e.target.value); setEnSaved(false); }}
+                  placeholder="Short description in English"
+                  disabled={enSaving}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                  <button
+                    className="btn"
+                    onClick={saveBlurbEn}
+                    disabled={enSaving || enInput.trim() === selectedBlurbEn.trim()}
+                  >
+                    {enSaving ? "Enregistrement…" : "Enregistrer"}
+                  </button>
+                  <span className={`field-hint${enInput.length > 120 ? " rf-over" : ""}`} style={{ margin: 0 }}>
+                    {enInput.length} / 120 caractères conseillés (au-delà, le texte est coupé sur la vignette)
+                  </span>
+                </div>
+                {enSaved && <div className="field-hint" style={{ color: "var(--moss)" }}>Enregistré ✓</div>}
+                {enError && <div className="error-box" style={{ marginTop: 6 }}>{enError}</div>}
+              </div>
+            )}
             {selected && (
               <div style={{ marginBottom: 12 }}>
                 {posts[selected.id]?.published_at ? (
