@@ -22,6 +22,11 @@ DirectoryIndex index.html
   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+  # Liens courts de la bio Instagram / Facebook → page « Mes liens » avec
+  # les paramètres UTM lus par GA4 (302 : modifiables sans cache navigateur).
+  RewriteRule ^ig/?$ /liens?utm_source=instagram&utm_medium=social&utm_campaign=bio [R=302,L,NE]
+  RewriteRule ^fb/?$ /liens?utm_source=facebook&utm_medium=social&utm_campaign=bio [R=302,L,NE]
+
   # Routage SPA : tout ce qui n'est ni un fichier ni un dossier existant sert
   # index.html. Un fichier manquant sous /assets/ reste un vrai 404.
   RewriteCond %{REQUEST_FILENAME} !-f
