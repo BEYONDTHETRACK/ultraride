@@ -237,6 +237,9 @@ export default function Login() {
     if (mode === "signup") {
       setInfo(t("Compte créé — vérifie ta boîte mail pour confirmer ton adresse avant de te connecter."));
       setPassword("");
+      // Sur téléphone, le message s'affiche en haut du formulaire, hors de l'écran :
+      // on y remonte pour que l'utilisateur voie que l'inscription a réussi.
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 

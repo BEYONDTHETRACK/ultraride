@@ -11,6 +11,7 @@ import { popAfterLogin } from "../lib/authProviders";
 export default function NativeBridge() {
   const navigate = useNavigate();
 
+  // L'écran natif fixe est retiré par AppSplash, une fois les logos dessinés.
   useEffect(() => {
     if (!isNative) return;
     let cleanups = [];

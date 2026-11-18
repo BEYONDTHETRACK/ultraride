@@ -45,9 +45,9 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
       // Image illisible par le navigateur : on envoie l'original.
       result = { blob: file, contentType: file.type, originalSize: file.size, newSize: file.size };
     }
-    const compressed = result.contentType === "image/webp" && result.blob !== file;
-
-    const ext = compressed ? "webp" : file.name.split(".").pop();
+    const compressed = result.blob !== file;
+    const EXT = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" };
+    const ext = compressed ? (EXT[result.contentType] || "jpg") : file.name.split(".").pop();
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("public-images")
@@ -56,7 +56,8 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
     if (uploadError) {
       const rejectedFormat =
         String(uploadError.statusCode) === "415" || /mime|type/i.test(uploadError.message || "");
-      setError(rejectedFormat ? t(FORMAT_ERROR_FR) : uploadError.message);
+      const tooBig = String(uploadError.statusCode) === "413" || /size|exceed/i.test(uploadError.message || "");
+      setError(rejectedFormat ? t(FORMAT_ERROR_FR) : tooBig ? t("Image trop lourde (5 Mo maximum). Essaie une image plus petite ou une capture d'écran.") : uploadError.message);
       e.target.value = "";
       setUploading(false);
       return;

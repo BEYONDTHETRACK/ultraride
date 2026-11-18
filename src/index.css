@@ -2199,3 +2199,15 @@ a.sv-bar-link:hover{background:var(--track);}
 .legal-fr-note{border:1px solid var(--line);border-left:4px solid var(--rust,#C4622D);border-radius:10px;padding:12px 14px;font-size:15px;margin:0 0 24px}
 .translate-btn{display:inline-flex;align-items:center;gap:7px;margin:8px 0 4px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;color:var(--rust-text,#9A4519);text-decoration:none;background:transparent}
 .translate-btn:hover{border-color:currentColor}
+/* Champs date / heure sur iOS : WebKit leur donne une largeur minimale
+   propre et centre le texte, ce qui les fait déborder de la carte. */
+input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"]{
+  -webkit-appearance:none;appearance:none;display:block;box-sizing:border-box;
+  width:100%;max-width:100%;min-width:0;text-align:left;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value{text-align:left;margin:0;}
+.field{min-width:0;}
+/* Ronds et cases visibles sur fond sombre (signalement d'un avis, formulaires). */
+.report-panel input[type="radio"], .report-panel input[type="checkbox"]{accent-color:var(--amber,#C4622D);width:18px;height:18px;}

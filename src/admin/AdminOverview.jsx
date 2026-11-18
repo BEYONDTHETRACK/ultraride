@@ -96,7 +96,7 @@ export default function AdminOverview() {
 
       <div className="sv-kpis">
         <Kpi value={fr(data.published)} label="Ultras publiés" sub={`${fr(data.upcoming)} à venir`} />
-        <Kpi value={fr(waiting)} label="En attente d'action" sub={`${data.pending?.length || 0} fiches · ${data.comments_pending || 0} avis · ${data.submissions_new || 0} propositions`} tone={waiting ? "rust" : null} />
+        <Kpi value={fr(waiting)} label="En attente d'action" sub={`${data.pending?.length || 0} fiches · ${data.comments_pending || 0} avis${data.comments_reported ? ` (dont ${data.comments_reported} signalé${data.comments_reported > 1 ? "s" : ""})` : ""} · ${data.submissions_new || 0} propositions`} tone={waiting ? "rust" : null} />
         <Kpi value={fr(data.visits7)} label="Visites · 7 jours" sub={`${fr(data.visits_all)} depuis le ${dateFr(data.tracking_since)}`} />
         <Kpi value={fr(data.profiles)} label="Comptes" sub={`+${fr(data.signups30)} sur 30 j · ${fr(data.org_signups30)} organisateurs`} />
         <Kpi value={fr(data.suggestions_pending)} label="Mises à jour proposées" sub={`${fr(data.suggestions_accepted)} acceptées au total`} />

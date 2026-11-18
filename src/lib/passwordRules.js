@@ -21,5 +21,9 @@ export function passwordErrorMessage(error) {
   ) {
     return t("Mot de passe trop faible : 12 caractères minimum, avec majuscule, minuscule et chiffre.");
   }
+  // Clics répétés sur « Créer mon compte » : Supabase limite l'envoi d'e-mails.
+  if (error.code === "over_email_send_rate_limit" || error.status === 429 || /only request this after/i.test(msg)) {
+    return t("Un e-mail de confirmation vient déjà d'être envoyé à cette adresse. Vérifie ta boîte (et les indésirables), ou patiente une minute avant de réessayer.");
+  }
   return msg;
 }

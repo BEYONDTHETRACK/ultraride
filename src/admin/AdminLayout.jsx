@@ -39,15 +39,21 @@ export default function AdminLayout() {
     const [racesRes, deletionRes, commentsRes, submissionsRes, updatesRes] = await Promise.all([
       supabase.from("races").select("id", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("races").select("id", { count: "exact", head: true }).eq("deletion_requested", true),
-      supabase.from("comments").select("id", { count: "exact", head: true }).or("status.eq.pending,deletion_requested.eq.true"),
+      supabase.from("comments").select("id").or("status.eq.pending,deletion_requested.eq.true"),
       supabase.from("race_submissions").select("id", { count: "exact", head: true }).eq("status", "new"),
       supabase.from("race_update_suggestions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    ]);
+    // Avis à traiter = en attente, demande de suppression, ou signalé (non classé).
+    const reportsRes = await supabase.from("comment_reports").select("comment_id").is("resolved_at", null);
+    const toModerate = new Set([
+      ...(commentsRes.data || []).map((c) => c.id),
+      ...(reportsRes.data || []).map((r) => r.comment_id),
     ]);
 
     setCounts({
       // Les deux files atterrissent sur le même écran : la pastille les cumule.
       races: (racesRes.count || 0) + (deletionRes.count || 0),
-      comments: commentsRes.count || 0,
+      comments: toModerate.size,
       submissions: submissionsRes.count || 0,
       updates: updatesRes.count || 0,
     });

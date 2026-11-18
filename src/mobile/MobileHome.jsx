@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { NotificationInvite } from "./NotificationSettings";
 import { useRaces, useGeo, isUpcoming, chronoRank, daysUntil, haversineKm, startCoords } from "./data";
 import { Cover, Pill, Stamp, Stat, raceStats, MiniCard, MenuButton, Icon, disciplineBg } from "./ui";
 import { t } from "../lib/i18n";
@@ -111,8 +110,6 @@ export default function MobileHome() {
             <Featured race={featured} />
           </Section>
         )}
-
-        <NotificationInvite />
 
         {races && (
           <Section title={t("PRÈS DE TOI")} action={<Link to="/carte" className="m-link">{t("Carte")}</Link>}>

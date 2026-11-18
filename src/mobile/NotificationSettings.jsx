@@ -74,14 +74,22 @@ export function NotificationsScreen() {
   );
 }
 
-// Invitation affichée une seule fois sur l'accueil de l'app.
+// Invitation unique : un panneau monte du bas 20 s après la première
+// ouverture de l'app, sur n'importe quel écran. La fenêtre système
+// (iOS / Android) n'est demandée que si la personne touche « Activer ».
+const INVITE_DELAY_MS = 20000;
+
 export function NotificationInvite() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!isNative || pushInviteSeen()) return;
-    pushPermission().then((p) => setShow(p === "prompt"));
+    const timer = setTimeout(() => {
+      if (pushInviteSeen()) return;
+      pushPermission().then((p) => { if (p === "prompt") setShow(true); });
+    }, INVITE_DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!show) return null;
@@ -94,11 +102,20 @@ export function NotificationInvite() {
   };
 
   return (
-    <div className="m-card m-geo">
-      <p><strong>{t("Être prévenu des nouveaux ultras ?")}</strong> {t("Une notification quand un ultra est ajouté ou quand des fiches sont mises à jour. Modifiable à tout moment dans le menu.")}</p>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button type="button" className="m-btn m-btn--dark" onClick={accept} disabled={busy}>{t("Activer")}</button>
-        <button type="button" className="m-btn m-btn--ghost" onClick={close} disabled={busy}>{t("Plus tard")}</button>
+    // Pas de fermeture en touchant à côté : l'invitation ne s'affiche qu'une fois,
+    // l'utilisateur doit choisir explicitement « Activer » ou « Plus tard ».
+    <div className="m-sheet-backdrop" role="presentation">
+      <div className="m-sheet" role="dialog" aria-modal="true" aria-labelledby="push-invite-title">
+        <div className="m-sheet-head">
+          <strong id="push-invite-title" className="m-row-title">{t("Rester au courant des ultras ?")}</strong>
+        </div>
+        <p className="m-note" style={{ margin: 0 }}>
+          {t("Une notification quand un nouvel ultra arrive dans l'annuaire, ou quand des fiches changent : dates, parcours, inscriptions. Une seule par vague, jamais une par fiche. Modifiable à tout moment dans le menu, rubrique Notifications.")}
+        </p>
+        <div className="m-sheet-foot m-sheet-foot--stack">
+          <button type="button" className="m-btn m-btn--dark" onClick={accept} disabled={busy}>{t("Activer les notifications")}</button>
+          <button type="button" className="m-btn m-btn--ghost" onClick={close} disabled={busy}>{t("Plus tard")}</button>
+        </div>
       </div>
     </div>
   );
