@@ -84,6 +84,8 @@ export default function App() {
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/proposer-course" element={<SubmitRace />} />
         <Route path="/liens" element={<Links />} />
+        <Route path="/ig" element={<Navigate to="/liens?utm_source=instagram&utm_medium=social&utm_campaign=bio" replace />} />
+        <Route path="/fb" element={<Navigate to="/liens?utm_source=facebook&utm_medium=social&utm_campaign=bio" replace />} />
         <Route path="/cgu" element={<LegalPage content={cgu} title="CGU — UltraRide" />} />
         <Route path="/confidentialite" element={<LegalPage content={confidentialite} title="Confidentialité — UltraRide" />} />
         <Route path="/le-projet" element={<LegalPage content={leProjet} title="Le projet — UltraRide" />} />
