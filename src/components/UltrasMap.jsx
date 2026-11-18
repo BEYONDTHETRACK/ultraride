@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { disciplineColor, raceCoords, countdownLabel, statsLine, formatShortDate } from "../lib/raceDisplay";
+import { t } from "../lib/i18n";
 
 // Vue par défaut bornée à l'Europe : les rares ultras lointains restent sur
 // la carte, hors champ tant qu'on ne s'y déplace pas.
@@ -61,13 +62,13 @@ export default function UltrasMap({ races, hoveredId, onBoundsChange, onOpen }) 
         fillColor: disciplineColor(r.discipline),
         fillOpacity: 0.95,
       });
-      const when = countdownLabel(r) || formatShortDate(r.start_date) || r.month || "";
+      const when = countdownLabel(r) || formatShortDate(r.start_date) || t(r.month) || "";
       marker.bindPopup(
         `<div class="v2-popup">
-          <span class="v2-popup-tag">${escapeHtml([r.start_place || r.country, when].filter(Boolean).join(" · ").toUpperCase())}</span>
+          <span class="v2-popup-tag">${escapeHtml([r.start_place || t(r.country), when].filter(Boolean).join(" · ").toUpperCase())}</span>
           <span class="v2-popup-name">${escapeHtml(r.name)}</span>
-          <span class="v2-popup-stats">${escapeHtml([r.discipline, statsLine(r)].filter(Boolean).join(" · "))}</span>
-          <a href="/courses/${encodeURIComponent(r.id)}" data-race="${escapeHtml(r.id)}" style="color:var(--rust-text);font-weight:600;margin-top:4px">Voir la fiche →</a>
+          <span class="v2-popup-stats">${escapeHtml([t(r.discipline), statsLine(r)].filter(Boolean).join(" · "))}</span>
+          <a href="/courses/${encodeURIComponent(r.id)}" data-race="${escapeHtml(r.id)}" style="color:var(--rust-text);font-weight:600;margin-top:4px">${escapeHtml(t("Voir la fiche →"))}</a>
         </div>`,
         { closeButton: true, autoPan: true }
       );

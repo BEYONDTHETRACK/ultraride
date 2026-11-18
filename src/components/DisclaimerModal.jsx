@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { t } from "../lib/i18n";
 
 // Passer en "_v2" pour réafficher la modale à tout le monde (texte modifié).
 const STORAGE_KEY = "ultraride_disclaimer_v1";
@@ -100,21 +101,14 @@ export default function DisclaimerModal() {
         aria-modal="true"
         aria-labelledby="disclaimer-title"
       >
-        <h2 id="disclaimer-title" className="disclaimer-title">Bon à savoir</h2>
-        <p>
-          Les informations présentées sur UltraRide proviennent des organisateurs et de sources publiques.
-          Nous faisons de notre mieux pour les tenir à jour, mais des erreurs ou des changements de dernière
-          minute restent possibles.
-        </p>
-        <p>
-          Avant de t'inscrire, vérifie toujours les dates, le règlement et les conditions sur le site officiel
-          de l'organisateur : lui seul fait foi. UltraRide ne peut être tenu responsable d'éventuelles inexactitudes.
-        </p>
+        <h2 id="disclaimer-title" className="disclaimer-title">{t("Bon à savoir")}</h2>
+        <p>{t("Les informations présentées sur UltraRide proviennent des organisateurs et de sources publiques. Nous faisons de notre mieux pour les tenir à jour, mais des erreurs ou des changements de dernière minute restent possibles.")}</p>
+        <p>{t("Avant de t'inscrire, vérifie toujours les dates, le règlement et les conditions sur le site officiel de l'organisateur : lui seul fait foi. UltraRide ne peut être tenu responsable d'éventuelles inexactitudes.")}</p>
         <button ref={buttonRef} type="button" className="disclaimer-button" onClick={close}>
-          J'ai compris
+          {t("J'ai compris")}
         </button>
         <Link to="/cgu#article-7-exactitude-des-informations" className="disclaimer-link" onClick={close}>
-          En savoir plus
+          {t("En savoir plus")}
         </Link>
       </div>
     </div>

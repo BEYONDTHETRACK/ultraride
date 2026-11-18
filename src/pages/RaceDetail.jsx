@@ -8,10 +8,12 @@ import FavoriteButton from "../components/FavoriteButton";
 import { formatPrice } from "../lib/price";
 import { normalizeUrl } from "../lib/organizerLinks";
 import SiteFooter from "../components/SiteFooter";
+import TranslateButton from "../components/TranslateButton";
 import { RaceTile, DisciplineBadge, FormatBadge } from "../components/RaceBits";
 import {
   countdownLabel, formatLongDate, formatNumber, PARCOURS_LABEL, isUpcoming, parseDate, byStartDate,
 } from "../lib/raceDisplay";
+import { t, tn, locale } from "../lib/i18n";
 
 export function RaceMap({ race }) {
   const ref = useRef(null);
@@ -40,10 +42,10 @@ export function RaceMap({ race }) {
     }
 
     L.circleMarker(start, { radius: 7, color: "#C4622D", fillColor: "#C4622D", fillOpacity: 0.9 })
-      .bindTooltip(race.start_place || "Départ").addTo(map);
+      .bindTooltip(race.start_place || t("Départ")).addTo(map);
     if (!isLoop) {
       L.circleMarker(end, { radius: 7, color: "#C1543F", fillColor: "#C1543F", fillOpacity: 0.9 })
-        .bindTooltip(race.end_place || "Arrivée").addTo(map);
+        .bindTooltip(race.end_place || t("Arrivée")).addTo(map);
     }
 
     const latLngBounds = L.latLngBounds(bounds);
@@ -88,8 +90,8 @@ export function Comments({ raceId }) {
   // Retour depuis la connexion (#avis) : on amène directement au bloc d'avis.
   useEffect(() => {
     if (hash !== "#avis") return;
-    const t = setTimeout(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    return () => clearTimeout(timer);
   }, [hash, comments.length]);
 
   const submit = async (e) => {
@@ -97,18 +99,18 @@ export function Comments({ raceId }) {
     setError(null);
     const { error } = await supabase.from("comments").insert({ race_id: raceId, author_id: user.id, body, status: "pending" });
     if (error) setError(error.message);
-    else { setBody(""); setInfo("Avis envoyé — il sera visible après validation par un administrateur."); load(); }
+    else { setBody(""); setInfo(t("Avis envoyé — il sera visible après validation par un administrateur.")); load(); }
   };
 
   return (
     <section id="avis" ref={sectionRef} style={{ display: "flex", flexDirection: "column", gap: 12, scrollMarginTop: 80 }}>
-      <h2 className="v2-h3">Avis des participants</h2>
-      {comments.length === 0 && <p className="muted">Aucun avis pour l'instant.</p>}
+      <h2 className="v2-h3">{t("Avis des participants")}</h2>
+      {comments.length === 0 && <p className="muted">{t("Aucun avis pour l'instant.")}</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
         {comments.map((c) => (
           <div key={c.id} className="card">
-            <div className="mono muted" style={{ fontSize: 11 }}>{c.author?.display_name || c.author?.email || "Utilisateur supprimé"}</div>
-            <p style={{ margin: "6px 0 0" }}>{c.body}</p>
+            <div className="mono muted" style={{ fontSize: 11 }}>{c.author?.display_name || c.author?.email || t("Utilisateur supprimé")}</div>
+            <p style={{ margin: "6px 0 0" }} lang="fr">{c.body}</p>
           </div>
         ))}
       </div>
@@ -119,22 +121,22 @@ export function Comments({ raceId }) {
       {!user ? (
         <div className="panel">
           <p className="muted" style={{ margin: 0 }}>
-            <Link to={`/login?next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>Connecte-toi</Link> ou{" "}
-            <Link to={`/login?mode=signup&next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>crée un compte</Link> pour laisser un avis.
+            <Link to={`/login?next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>{t("Connecte-toi")}</Link> {t("ou")}{" "}
+            <Link to={`/login?mode=signup&next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>{t("crée un compte")}</Link> {t("pour laisser un avis.")}
           </p>
         </div>
       ) : isOrganizer ? (
         <div className="panel">
-          <p className="muted" style={{ margin: 0 }}>Les comptes organisateur ne peuvent pas laisser d'avis.</p>
+          <p className="muted" style={{ margin: 0 }}>{t("Les comptes organisateur ne peuvent pas laisser d'avis.")}</p>
         </div>
       ) : (
         <form onSubmit={submit} className="panel">
           <div className="field">
-            <label>Ton avis</label>
+            <label>{t("Ton avis")}</label>
             <textarea required rows={3} value={body} onChange={(e) => setBody(e.target.value)} />
           </div>
-          <button className="btn btn-primary" type="submit">Envoyer</button>
-          <div className="field-hint" style={{ marginTop: 8 }}>Ton avis sera visible après validation par un administrateur.</div>
+          <button className="btn btn-primary" type="submit">{t("Envoyer")}</button>
+          <div className="field-hint" style={{ marginTop: 8 }}>{t("Ton avis sera visible après validation par un administrateur.")}</div>
         </form>
       )}
     </section>
@@ -159,13 +161,13 @@ function Elevation({ profile, km }) {
   const line = `M${pts.join(" L ")}`;
   return (
     <div className="v2-panel" style={{ padding: "18px 18px 10px" }}>
-      <svg width="100%" height="140" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Profil d'élévation du parcours">
+      <svg width="100%" height="140" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label={t("Profil d'élévation du parcours")}>
         <path d={`${line} L 800 140 L 0 140 Z`} fill="var(--elev-fill)" />
         <path d={line} fill="none" stroke="#B4541F" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--mono)", fontSize: 11, color: "var(--text2)", paddingTop: 6 }}>
         <span>0 km · {formatNumber(minY)} m</span>
-        <span>Altitude max {formatNumber(maxY)} m</span>
+        <span>{t("Altitude max {n} m", { n: formatNumber(maxY) })}</span>
         <span>{formatNumber(km || maxX)} km</span>
       </div>
     </div>
@@ -282,7 +284,7 @@ export default function RaceDetail() {
   }, [id]);
 
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
-  if (!race) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">Chargement…</p></div>;
+  if (!race) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">{t("Chargement…")}</p></div>;
 
   const newerEdition = !race.is_current
     ? siblings.find((s) => s.is_current && s.status === "published" && s.edition > race.edition)
@@ -314,12 +316,12 @@ export default function RaceDetail() {
           <div className="v2-race-hero-top">
             <Link to="/ultras">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
-              Tous les ultras
+              {t("Tous les ultras")}
             </Link>
             <div className="v2-race-hero-actions">
               <button type="button" className="v2-hero-btn" onClick={share}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5" /><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></svg>
-                {shared ? "Lien copié" : "Partager"}
+                {shared ? t("Lien copié") : t("Partager")}
               </button>
               <span className="v2-hero-fav"><FavoriteButton raceId={race.id} size={22} /></span>
             </div>
@@ -327,9 +329,9 @@ export default function RaceDetail() {
 
           {newerEdition && (
             <div style={{ background: "rgba(245,241,230,0.1)", border: "1px solid #E9A27A", borderRadius: 14, padding: "12px 16px", fontSize: 15 }}>
-              Une édition plus récente existe :{" "}
+              {t("Une édition plus récente existe :")}{" "}
               <Link to={`/courses/${newerEdition.id}`} style={{ fontWeight: 700, textDecoration: "underline" }}>
-                {`Édition ${newerEdition.edition}${editionYear(newerEdition) ? ` · ${editionYear(newerEdition)}` : ""}`}
+                {`${t("Édition {n}", { n: newerEdition.edition })}${editionYear(newerEdition) ? ` · ${editionYear(newerEdition)}` : ""}`}
               </Link>
             </div>
           )}
@@ -339,22 +341,22 @@ export default function RaceDetail() {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DisciplineBadge discipline={race.discipline} light />
                 <FormatBadge format={race.format} />
-                {race.mode && <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>{race.mode.toUpperCase()}</span>}
-                {race.country && <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>{race.country.toUpperCase()}</span>}
+                {race.mode && <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>{t(race.mode).toUpperCase()}</span>}
+                {race.country && <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>{t(race.country).toUpperCase()}</span>}
                 {(race.edition > 1 || siblings.length > 0) && (
-                  <span className="v2-pill" style={{ border: "1px solid #E9A27A", color: "#E9A27A" }}>{`ÉDITION ${race.edition}${year ? ` · ${year}` : ""}`}</span>
+                  <span className="v2-pill" style={{ border: "1px solid #E9A27A", color: "#E9A27A" }}>{`${t("ÉDITION {n}", { n: race.edition })}${year ? ` · ${year}` : ""}`}</span>
                 )}
                 {previousEditions.length > 0 && (
                   <a href="#editions" className="v2-pill" style={{ border: "1px solid rgba(245,241,230,0.4)", color: "#F5F1E6", textDecoration: "none" }}
                     onClick={(e) => { e.preventDefault(); document.getElementById("editions")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
-                    {`VOIR LES ÉDITIONS PASSÉES (${previousEditions.length}) ↓`}
+                    {t("VOIR LES ÉDITIONS PASSÉES ({n}) ↓", { n: previousEditions.length })}
                   </a>
                 )}
               </div>
               <h1 className="v2-race-title">{race.name}</h1>
               {orgName && (
                 <span style={{ fontSize: 16, color: "#C9D3C6" }}>
-                  Organisé par{" "}
+                  {t("Organisé par")}{" "}
                   {race.organizer?.id
                     ? <Link to={`/organizers/${race.organizer.id}`} style={{ color: "#F5F1E6", fontWeight: 600, textDecoration: "underline" }}>{orgName}</Link>
                     : <b style={{ color: "#F5F1E6" }}>{orgName}</b>}
@@ -364,7 +366,7 @@ export default function RaceDetail() {
             <div className="v2-race-hero-side">
               {race.image_url && <div className="v2-race-logo"><img src={race.image_url} alt="" /></div>}
               {countdown && (
-                <div className="v2-stamp"><span>DÉPART</span><span>{countdown === "Aujourd'hui" ? "J-0" : countdown}</span></div>
+                <div className="v2-stamp"><span>{t("DÉPART")}</span><span>{countdown === t("Aujourd'hui") ? t("J-{n}", { n: 0 }) : countdown}</span></div>
               )}
             </div>
           </div>
@@ -374,24 +376,24 @@ export default function RaceDetail() {
       <div className="v2-wrap v2-race-layout">
         <main className="v2-race-main">
           <div className="v2-bigstats">
-            <div className="v2-bigstat"><span className="v2-label">Distance</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
-            <div className="v2-bigstat"><span className="v2-label">Dénivelé +</span><b>{race.dplus && Number(race.dplus) > 100 ? `${formatNumber(race.dplus)} m` : "—"}</b></div>
-            <div className="v2-bigstat"><span className="v2-label">Départ</span><b>{race.start_date ? parseDate(race.start_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit" }) : (race.month || "—")}</b></div>
-            <div className="v2-bigstat"><span className="v2-label">Parcours</span><b>{PARCOURS_LABEL[race.parcours] || race.parcours || "—"}</b></div>
+            <div className="v2-bigstat"><span className="v2-label">{t("Distance")}</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
+            <div className="v2-bigstat"><span className="v2-label">{t("Dénivelé +")}</span><b>{race.dplus && Number(race.dplus) > 100 ? `${formatNumber(race.dplus)} m` : "—"}</b></div>
+            <div className="v2-bigstat"><span className="v2-label">{t("Départ")}</span><b>{race.start_date ? parseDate(race.start_date).toLocaleDateString(locale(), { day: "2-digit", month: "2-digit", year: "2-digit" }) : (t(race.month) || "—")}</b></div>
+            <div className="v2-bigstat"><span className="v2-label">{t("Parcours")}</span><b>{PARCOURS_LABEL[race.parcours] || t(race.parcours) || "—"}</b></div>
           </div>
 
           <section style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <h2 className="v2-h3">Roadbook</h2>
+            <h2 className="v2-h3">{t("Roadbook")}</h2>
             {(race.start_place || endPlace) && (
               <div className="v2-roadbook">
                 <span style={{ width: 14, height: 14, borderRadius: 7, border: "2px solid var(--paper)", flexShrink: 0 }} />
-                <b>{race.start_place || "Départ"}</b>
+                <b>{race.start_place || t("Départ")}</b>
                 <span className="v2-roadbook-line" />
                 <span className="mono muted v2-roadbook-stats" style={{ fontSize: 13 }}>
-                  {[race.km ? `${formatNumber(race.km)} km` : null, race.dplus && Number(race.dplus) > 100 ? `${formatNumber(race.dplus)} m D+` : null].filter(Boolean).join(" · ") || (isLoop ? "Boucle" : "")}
+                  {[race.km ? `${formatNumber(race.km)} km` : null, race.dplus && Number(race.dplus) > 100 ? `${formatNumber(race.dplus)} m D+` : null].filter(Boolean).join(" · ") || (isLoop ? t("Boucle") : "")}
                 </span>
                 <span className="v2-roadbook-line" />
-                <b>{isLoop ? "Retour au départ" : (endPlace || "Arrivée")}</b>
+                <b>{isLoop ? t("Retour au départ") : (endPlace || t("Arrivée"))}</b>
                 <span style={{ width: 14, height: 14, borderRadius: 7, background: "#B4541F", flexShrink: 0 }} />
               </div>
             )}
@@ -401,43 +403,44 @@ export default function RaceDetail() {
 
           {(race.long_blurb || race.blurb) && (
             <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <h2 className="v2-h3">L'ultra</h2>
-              <p className="v2-race-text">{race.long_blurb || race.blurb}</p>
-              {race.terrain && <p className="muted" style={{ margin: 0, fontSize: 15 }}>Terrain : {race.terrain}</p>}
+              <h2 className="v2-h3">{t("L'ultra")}</h2>
+              <p className="v2-race-text" lang="fr">{race.long_blurb || race.blurb}</p>
+              {race.terrain && <p className="muted" style={{ margin: 0, fontSize: 15 }}>{t("Terrain : {x}", { x: race.terrain })}</p>}
+              <div><TranslateButton text={[race.long_blurb || race.blurb, race.terrain].filter(Boolean).join("\n\n")} /></div>
             </section>
           )}
 
           <Comments raceId={race.id} />
         </main>
 
-        <aside className="v2-race-aside" aria-label="Inscription et informations">
+        <aside className="v2-race-aside" aria-label={t("Inscription et informations")}>
           <div className="v2-panel" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0 8px 24px rgba(27,43,32,0.06)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
               <span className="v2-eyebrow" style={{ fontSize: 12, color: race.open ? "var(--moss)" : "#D9614F" }}>
-                {race.open ? "Inscriptions ouvertes" : "Inscriptions fermées"}
+                {race.open ? t("Inscriptions ouvertes") : t("Inscriptions fermées")}
               </span>
               {countdown && <span className="v2-countdown">{countdown}</span>}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div className="v2-kv"><span>Départ</span><span>{[formatLongDate(race.start_date) || race.month, race.departure_time, race.start_place].filter(Boolean).join(" · ") || "—"}</span></div>
-              {race.end_date && <div className="v2-kv"><span>Fin</span><span>{formatLongDate(race.end_date)}</span></div>}
-              <div className="v2-kv"><span>Arrivée</span><span>{isLoop ? "Boucle, retour au départ" : (endPlace || "—")}</span></div>
-              <div className="v2-kv"><span>Tarif</span><span>{price || "Voir le site de l'organisateur"}</span></div>
+              <div className="v2-kv"><span>{t("Départ")}</span><span>{[formatLongDate(race.start_date) || t(race.month), race.departure_time, race.start_place].filter(Boolean).join(" · ") || "—"}</span></div>
+              {race.end_date && <div className="v2-kv"><span>{t("Fin")}</span><span>{formatLongDate(race.end_date)}</span></div>}
+              <div className="v2-kv"><span>{t("Arrivée")}</span><span>{isLoop ? t("Boucle, retour au départ") : (endPlace || "—")}</span></div>
+              <div className="v2-kv"><span>{t("Tarif")}</span><span>{price || t("Voir le site de l'organisateur")}</span></div>
             </div>
             {signupUrl && (
               <a href={signupUrl} target="_blank" rel="noopener noreferrer" className="v2-btn v2-btn-rust" style={{ minHeight: 54, fontSize: 17 }}>
-                {race.registration_url ? "S'inscrire sur le site officiel" : "Site de l'organisateur"}
+                {race.registration_url ? t("S'inscrire sur le site officiel") : t("Site de l'organisateur")}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
               </a>
             )}
             {upcoming && (
               <button type="button" className="v2-btn v2-btn-outline" style={{ minHeight: 46, fontSize: 15 }} onClick={() => downloadIcs(race)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-                Ajouter à mon agenda
+                {t("Ajouter à mon agenda")}
               </button>
             )}
             <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.4 }}>
-              Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.
+              {t("Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.")}
             </p>
           </div>
 
@@ -445,28 +448,28 @@ export default function RaceDetail() {
           {orgRaces.length > 0 && (race.organizer?.id) && (
             <div className="v2-panel" style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: -8 }}>
               <span style={{ fontSize: 14, color: "var(--text3)" }}>
-                Aussi : {orgRaces.slice(0, 3).map((r) => r.name).join(", ")}{orgRaces.length > 3 ? "…" : "."}
+                {t("Aussi :")} {orgRaces.slice(0, 3).map((r) => r.name).join(", ")}{orgRaces.length > 3 ? "…" : "."}
               </span>
               <Link to={`/organizers/${race.organizer.id}`} className="v2-link" style={{ fontSize: 14 }}>
-                Voir les {orgRaces.length + 1} ultras de l'organisateur →
+                {t("Voir les {n} ultras de l'organisateur →", { n: orgRaces.length + 1 })}
               </Link>
             </div>
           )}
 
           <div id="editions" className="v2-panel" style={{ display: "flex", flexDirection: "column", gap: 12, scrollMarginTop: 90 }}>
-            <span className="v2-h3" style={{ fontSize: 12 }}>Éditions</span>
+            <span className="v2-h3" style={{ fontSize: 12 }}>{t("Éditions")}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="v2-ed-num">{race.edition || 1}</span>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <b style={{ fontSize: 15 }}>{year ? `Édition ${year}` : "Édition en cours"}</b>
+                <b style={{ fontSize: 15 }}>{year ? t("Édition {n}", { n: year }) : t("Édition en cours")}</b>
                 <span className="muted" style={{ fontSize: 13 }}>
-                  {previousEditions.length ? "Éditions précédentes :" : "Les éditions précédentes s'afficheront ici."}
+                  {previousEditions.length ? t("Éditions précédentes :") : t("Les éditions précédentes s'afficheront ici.")}
                 </span>
               </div>
             </div>
             {previousEditions.map((e) => (
               <Link key={e.id} to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14, color: "var(--rust-text)" }}>
-                {[`Édition ${e.edition}`, editionYear(e), e.km ? `${formatNumber(e.km)} km` : null].filter(Boolean).join(" — ")}
+                {[t("Édition {n}", { n: e.edition }), editionYear(e), e.km ? `${formatNumber(e.km)} km` : null].filter(Boolean).join(" — ")}
               </Link>
             ))}
           </div>
@@ -476,8 +479,8 @@ export default function RaceDetail() {
       {similar.length > 0 && (
         <section className="v2-wrap" style={{ paddingBottom: 56 }}>
           <div className="v2-section-head">
-            <h2 className="v2-h2">Dans le même esprit</h2>
-            <Link to={`/ultras?discipline=${encodeURIComponent(race.discipline || "")}`} className="v2-link">Tous les ultras {race.discipline} →</Link>
+            <h2 className="v2-h2">{t("Dans le même esprit")}</h2>
+            <Link to={`/ultras?discipline=${encodeURIComponent(race.discipline || "")}`} className="v2-link">{t("Tous les ultras {d} →", { d: t(race.discipline) })}</Link>
           </div>
           <div className="v2-grid-tiles">
             {similar.map((r, i) => <RaceTile key={r.id} race={r} index={i} />)}

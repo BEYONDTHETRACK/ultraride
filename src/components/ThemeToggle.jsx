@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { t } from "../lib/i18n";
 
 // Thème : "light", "dark" ou "auto" (suit le réglage de l'appareil).
 // Le choix est mémorisé dans le navigateur ; index.html l'applique avant le
 // premier rendu pour éviter un flash de la mauvaise couleur.
 const KEY = "ultraride_theme";
 const ORDER = ["auto", "light", "dark"];
-const LABEL = { auto: "Auto", light: "Clair", dark: "Sombre" };
+const LABEL_FR = { auto: "Auto", light: "Clair", dark: "Sombre" };
+const LABEL = new Proxy(LABEL_FR, { get: (o, k) => t(o[k]) });
 
 function readTheme() {
   try {
@@ -75,8 +77,8 @@ export function ThemeCycleButton() {
       type="button"
       className="theme-toggle"
       onClick={() => setMode(next)}
-      aria-label={`Thème : ${LABEL[mode]}. Passer en ${LABEL[next].toLowerCase()}`}
-      title={`Thème : ${LABEL[mode]}`}
+      aria-label={t("Thème : {a}. Passer en {b}", { a: LABEL[mode], b: LABEL[next].toLowerCase() })}
+      title={t("Thème : {a}", { a: LABEL[mode] })}
     >
       <Icon mode={mode} />
     </button>
@@ -87,7 +89,7 @@ export function ThemeCycleButton() {
 export function ThemeSegmented({ className = "" }) {
   const [mode, setMode] = useTheme();
   return (
-    <div className={`theme-seg ${className}`} role="group" aria-label="Thème">
+    <div className={`theme-seg ${className}`} role="group" aria-label={t("Thème")}>
       {ORDER.map((m) => (
         <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}>
           <Icon mode={m} />{LABEL[m]}

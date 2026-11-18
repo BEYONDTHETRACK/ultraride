@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import PriceTag from "./PriceTag";
 import ClampedBlurb from "./ClampedBlurb";
+import { t, tn } from "../lib/i18n";
 
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
@@ -30,7 +31,7 @@ export default function EventCard({ event }) {
       ? null
       : distances[0] === distances[distances.length - 1]
         ? `${distances[0]} km`
-        : `${distances[0]} à ${distances[distances.length - 1]} km`;
+        : t("{a} à {b} km", { a: distances[0], b: distances[distances.length - 1] });
 
   return (
     <div
@@ -45,23 +46,23 @@ export default function EventCard({ event }) {
         <div className="race-card-top">
           <div>
             <div className="race-card-loc">
-              {countries.join(" · ")} · {disciplines.join(" · ")}
+              {countries.map((c) => t(c)).join(" · ")} · {disciplines.map((d) => t(d)).join(" · ")}
             </div>
             <div className="race-card-title" title={name}>{name}</div>
           </div>
           <span className={`badge ${anyOpen ? "badge-published" : "badge-rejected"}`}>
-            {anyOpen ? "Ouvert" : "Fermé"}
+            {anyOpen ? t("Ouvert") : t("Fermé")}
           </span>
         </div>
 
         <ClampedBlurb expanded={expanded} onToggle={() => setExpanded((v) => !v)}>
-          <strong>{races.length} format{races.length > 1 ? "s" : ""}</strong>
+          <strong>{tn(races.length, "{n} format", "{n} formats")}</strong>
           {distanceLabel ? ` · ${distanceLabel}` : ""}
-          {months.length > 0 ? ` · ${months.join(", ")}` : ""}
+          {months.length > 0 ? ` · ${months.map((m) => t(m)).join(", ")}` : ""}
         </ClampedBlurb>
 
         <div className="event-card-price-slot" style={{ visibility: minPrice != null ? "visible" : "hidden" }}>
-          <span className="muted mono" style={{ fontSize: 11, marginRight: 6 }}>à partir de</span>
+          <span className="muted mono" style={{ fontSize: 11, marginRight: 6 }}>{t("à partir de")}</span>
           <PriceTag price={minPrice ?? 0} showAmount />
         </div>
 

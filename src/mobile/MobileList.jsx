@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useRaces, chronoRank, groupLabel, matchesSearch, MONTHS } from "./data";
 import { RaceRow, MenuButton, Icon, disciplineBg, formatLabel, useFavoriteSet } from "./ui";
+import { t, tn } from "../lib/i18n";
 
 const DISCIPLINES = ["Route", "Gravel", "VTT"];
 const FORMATS = ["course", "aventure", "endurance"];
@@ -29,7 +30,7 @@ export default function MobileList() {
   }, [urlQ, filters.d]);
 
   const countries = useMemo(
-    () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort() : []),
+    () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort((a, b) => t(a).localeCompare(t(b))) : []),
     [races]
   );
 
@@ -53,14 +54,14 @@ export default function MobileList() {
     let cur = null;
     results.forEach((r) => {
       const label = groupLabel(r);
-      if (label === "Éditions passées" && !showPast) return;
+      if (label === t("Éditions passées") && !showPast) return;
       if (!cur || cur.label !== label) { cur = { label, items: [] }; out.push(cur); }
       cur.items.push(r);
     });
     return out;
   }, [results, showPast]);
 
-  const pastCount = useMemo(() => results.filter((r) => groupLabel(r) === "Éditions passées").length, [results]);
+  const pastCount = useMemo(() => results.filter((r) => groupLabel(r) === t("Éditions passées")).length, [results]);
   const activeCount = Object.keys(EMPTY).filter((k) => k !== "d" && filters[k]).length;
   const set = (k, v) => setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
 
@@ -69,28 +70,28 @@ export default function MobileList() {
       <div className="m-stickyhead">
         <div className="m-pad m-stack m-stack--tight">
           <div className="m-topbar">
-            <h1 className="m-h1 m-h1--page">ULTRAS</h1>
+            <h1 className="m-h1 m-h1--page">{t("ULTRAS")}</h1>
             <div className="m-topbar-right">
-              <span className="m-label">{races ? `${results.length} résultat${results.length !== 1 ? "s" : ""}` : ""}</span>
+              <span className="m-label">{races ? tn(results.length, "{n} résultat", "{n} résultats") : ""}</span>
               <MenuButton />
             </div>
           </div>
           <div className="m-searchrow">
             <label className="m-search">
               <Icon name="search" size={18} />
-              <span className="m-sr">Rechercher un ultra</span>
-              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => setUrlQ(q.trim())} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Nom, lieu, organisateur…" enterKeyHint="search" />
+              <span className="m-sr">{t("Rechercher un ultra")}</span>
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => setUrlQ(q.trim())} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder={t("Nom, lieu, organisateur…")} enterKeyHint="search" />
             </label>
-            <button type="button" className="m-squarebtn" aria-label={`Filtres${activeCount ? ` (${activeCount} actifs)` : ""}`} onClick={() => setSheet(true)}>
+            <button type="button" className="m-squarebtn" aria-label={activeCount ? t("Filtres ({n} actifs)", { n: activeCount }) : t("Filtres")} onClick={() => setSheet(true)}>
               <Icon name="sliders" size={18} />
               {activeCount > 0 && <span className="m-badge">{activeCount}</span>}
             </button>
           </div>
           <div className="m-chips">
-            <button type="button" className={`m-chip${!filters.d ? " m-chip--on" : ""}`} onClick={() => setFilters((f) => ({ ...f, d: "" }))}>Tous</button>
+            <button type="button" className={`m-chip${!filters.d ? " m-chip--on" : ""}`} onClick={() => setFilters((f) => ({ ...f, d: "" }))}>{t("Tous")}</button>
             {DISCIPLINES.map((d) => (
               <button key={d} type="button" className={`m-chip${filters.d === d ? " m-chip--on" : ""}`} onClick={() => set("d", d)}>
-                <span className="m-chip-dot" style={{ background: disciplineBg(d) }} />{d}
+                <span className="m-chip-dot" style={{ background: disciplineBg(d) }} />{t(d)}
               </button>
             ))}
           </div>
@@ -98,12 +99,12 @@ export default function MobileList() {
       </div>
 
       <div className="m-pad">
-        {error && <div className="m-error">Impossible de charger les ultras ({error}).</div>}
+        {error && <div className="m-error">{t("Impossible de charger les ultras ({e}).", { e: error })}</div>}
         {!races && !error && <div className="m-skeleton" style={{ height: 400, marginTop: 16 }} />}
         {races && results.length === 0 && (
           <div className="m-empty">
-            <p>Aucun ultra ne correspond.</p>
-            <button type="button" className="m-btn m-btn--ghost" onClick={() => { setQ(""); setUrlQ(""); setFilters(EMPTY); }}>Réinitialiser</button>
+            <p>{t("Aucun ultra ne correspond.")}</p>
+            <button type="button" className="m-btn m-btn--ghost" onClick={() => { setQ(""); setUrlQ(""); setFilters(EMPTY); }}>{t("Réinitialiser")}</button>
           </div>
         )}
         {groups.map((g) => (
@@ -114,20 +115,20 @@ export default function MobileList() {
         ))}
         {pastCount > 0 && !showPast && (
           <button type="button" className="m-btn m-btn--ghost m-btn--block" style={{ marginTop: 20 }} onClick={() => setShowPast(true)}>
-            Afficher les {pastCount} éditions passées
+            {t("Afficher les {n} éditions passées", { n: pastCount })}
           </button>
         )}
       </div>
 
       {sheet && (
         <div className="m-sheet-backdrop" onClick={() => setSheet(false)}>
-          <div className="m-sheet" role="dialog" aria-label="Filtres" onClick={(e) => e.stopPropagation()}>
+          <div className="m-sheet" role="dialog" aria-label={t("Filtres")} onClick={(e) => e.stopPropagation()}>
             <div className="m-sheet-head">
-              <span className="m-h2">Filtres</span>
-              <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Fermer" onClick={() => setSheet(false)}><Icon name="close" /></button>
+              <span className="m-h2">{t("Filtres")}</span>
+              <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={t("Fermer")} onClick={() => setSheet(false)}><Icon name="close" /></button>
             </div>
             <div className="m-filter-group">
-              <span className="m-label">FORMAT</span>
+              <span className="m-label">{t("FORMAT")}</span>
               <div className="m-chips m-chips--wrap">
                 {FORMATS.map((f) => (
                   <button key={f} type="button" className={`m-chip${filters.f === f ? " m-chip--on" : ""}`} onClick={() => set("f", f)}>{formatLabel(f)}</button>
@@ -135,36 +136,36 @@ export default function MobileList() {
               </div>
             </div>
             <div className="m-filter-group">
-              <span className="m-label">MODE</span>
+              <span className="m-label">{t("MODE")}</span>
               <div className="m-chips m-chips--wrap">
                 {MODES.map((m) => (
-                  <button key={m} type="button" className={`m-chip${filters.m === m ? " m-chip--on" : ""}`} onClick={() => set("m", m)}>{m}</button>
+                  <button key={m} type="button" className={`m-chip${filters.m === m ? " m-chip--on" : ""}`} onClick={() => set("m", m)}>{t(m)}</button>
                 ))}
               </div>
             </div>
             <div className="m-filter-group">
-              <label className="m-label" htmlFor="m-f-country">PAYS</label>
+              <label className="m-label" htmlFor="m-f-country">{t("PAYS")}</label>
               <select id="m-f-country" className="m-select" value={filters.c} onChange={(e) => setFilters((f) => ({ ...f, c: e.target.value }))}>
-                <option value="">Tous les pays</option>
-                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="">{t("Tous les pays")}</option>
+                {countries.map((c) => <option key={c} value={c}>{t(c)}</option>)}
               </select>
             </div>
             <div className="m-filter-group">
-              <label className="m-label" htmlFor="m-f-month">MOIS</label>
+              <label className="m-label" htmlFor="m-f-month">{t("MOIS")}</label>
               <select id="m-f-month" className="m-select" value={filters.mo} onChange={(e) => setFilters((f) => ({ ...f, mo: e.target.value }))}>
-                <option value="">Tous les mois</option>
-                {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+                <option value="">{t("Tous les mois")}</option>
+                {MONTHS.map((m) => <option key={m} value={m}>{t(m)}</option>)}
               </select>
             </div>
             <div className="m-filter-group">
-              <span className="m-label">INSCRIPTIONS</span>
+              <span className="m-label">{t("INSCRIPTIONS")}</span>
               <div className="m-chips m-chips--wrap">
-                <button type="button" className={`m-chip${filters.reg === "open" ? " m-chip--on" : ""}`} onClick={() => set("reg", "open")}>Ouvertes uniquement</button>
+                <button type="button" className={`m-chip${filters.reg === "open" ? " m-chip--on" : ""}`} onClick={() => set("reg", "open")}>{t("Ouvertes uniquement")}</button>
               </div>
             </div>
             <div className="m-sheet-foot">
-              <button type="button" className="m-btn m-btn--ghost" onClick={() => setFilters((f) => ({ ...EMPTY, d: f.d }))}>Réinitialiser</button>
-              <button type="button" className="m-btn m-btn--primary" onClick={() => setSheet(false)}>Voir {results.length} ultra{results.length !== 1 ? "s" : ""}</button>
+              <button type="button" className="m-btn m-btn--ghost" onClick={() => setFilters((f) => ({ ...EMPTY, d: f.d }))}>{t("Réinitialiser")}</button>
+              <button type="button" className="m-btn m-btn--primary" onClick={() => setSheet(false)}>{tn(results.length, "Voir {n} ultra", "Voir {n} ultras")}</button>
             </div>
           </div>
         </div>

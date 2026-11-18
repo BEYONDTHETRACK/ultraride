@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t, getLang } from "../lib/i18n";
 
 // Nominatim (OpenStreetMap) place autocomplete — no API key needed.
 // On selection, calls onSelect({ name, lat, lon }) so the parent can fill
@@ -22,7 +23,7 @@ export default function PlaceSearch({ label, value, onSelect, placeholder }) {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&limit=6&accept-language=fr`,
-          { headers: { "Accept-Language": "fr" } }
+          { headers: { "Accept-Language": getLang() } }
         );
         const data = await res.json();
         setSuggestions(data);
@@ -46,7 +47,7 @@ export default function PlaceSearch({ label, value, onSelect, placeholder }) {
         value={query}
         onChange={(e) => search(e.target.value)}
         onFocus={() => suggestions.length > 0 && setOpen(true)}
-        placeholder={placeholder || "Rechercher un lieu…"}
+        placeholder={placeholder || t("Rechercher un lieu…")}
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (

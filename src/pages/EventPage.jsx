@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import RaceCard from "../components/RaceCard";
+import { t, tn } from "../lib/i18n";
 
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
@@ -24,12 +25,12 @@ export default function EventPage() {
   }, [slug]);
 
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
-  if (races === null) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">Chargement…</p></div>;
+  if (races === null) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">{t("Chargement…")}</p></div>;
   if (races.length === 0) {
     return (
       <div className="wrap" style={{ paddingTop: 40 }}>
-        <p className="muted">Cet événement n'existe pas ou n'a aucun ultra publié.</p>
-        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
+        <p className="muted">{t("Cet événement n'existe pas ou n'a aucun ultra publié.")}</p>
+        <Link to="/" className="muted" style={{ fontSize: 13 }}>{t("← Tous les ultras")}</Link>
       </div>
     );
   }
@@ -43,31 +44,31 @@ export default function EventPage() {
   const totalKm = distances.length
     ? (distances[0] === distances[distances.length - 1]
         ? `${distances[0]} km`
-        : `${distances[0]} à ${distances[distances.length - 1]} km`)
+        : t("{a} à {b} km", { a: distances[0], b: distances[distances.length - 1] }))
     : "—";
 
   return (
     <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60 }}>
-      <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
+      <Link to="/" className="muted" style={{ fontSize: 13 }}>{t("← Tous les ultras")}</Link>
 
       <h1 className="h1" style={{ marginTop: 12 }}>{eventName}</h1>
       <div className="muted mono" style={{ fontSize: 13 }}>
-        {countries.join(" · ")}
-        {months.length > 0 && ` · ${months.join(", ")}`}
+        {countries.map((c) => t(c)).join(" · ")}
+        {months.length > 0 && ` · ${months.map((m) => t(m)).join(", ")}`}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginTop: 20 }}>
         <div className="card">
-          <div className="mono muted" style={{ fontSize: 11 }}>Formats</div>
+          <div className="mono muted" style={{ fontSize: 11 }}>{t("Formats")}</div>
           <div className="mono">{races.length}</div>
         </div>
         <div className="card">
-          <div className="mono muted" style={{ fontSize: 11 }}>Distances</div>
+          <div className="mono muted" style={{ fontSize: 11 }}>{t("Distances")}</div>
           <div className="mono">{totalKm}</div>
         </div>
         <div className="card">
-          <div className="mono muted" style={{ fontSize: 11 }}>Inscriptions</div>
-          <div className="mono">{races.some((r) => r.open) ? "Ouvertes" : "Fermées"}</div>
+          <div className="mono muted" style={{ fontSize: 11 }}>{t("Inscriptions")}</div>
+          <div className="mono">{races.some((r) => r.open) ? t("Ouvertes") : t("Fermées")}</div>
         </div>
       </div>
 
@@ -77,14 +78,14 @@ export default function EventPage() {
             <Link to={`/organizers/${organizer.id}`} className="organizer-box-head organizer-box-head-link">
               {organizer.logo_url && <img src={organizer.logo_url} alt="" className="organizer-logo" loading="lazy" decoding="async" />}
               <div>
-                <div className="organizer-box-label">Organisé par</div>
+                <div className="organizer-box-label">{t("Organisé par")}</div>
                 <div className="organizer-box-name">{organizer.name}</div>
               </div>
             </Link>
           ) : (
             <div className="organizer-box-head">
               <div>
-                <div className="organizer-box-label">Organisé par</div>
+                <div className="organizer-box-label">{t("Organisé par")}</div>
                 <div className="organizer-box-name">{organizer.name}</div>
               </div>
             </div>
@@ -93,7 +94,7 @@ export default function EventPage() {
       )}
 
       <div className="h2" style={{ marginTop: 32, marginBottom: 16 }}>
-        Les {races.length} format{races.length > 1 ? "s" : ""}
+        {tn(races.length, "Le format", "Les {n} formats")}
       </div>
       <div className="race-grid">
         {races.map((r) => <RaceCard key={r.id} race={r} />)}

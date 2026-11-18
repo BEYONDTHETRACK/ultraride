@@ -1,4 +1,5 @@
 import { isNative } from "./native";
+import { t, locale } from "./i18n";
 
 // Image 1080×1350 (format portrait Instagram) du Passeport Ultra, dessinée
 // directement sur un canvas : aucune librairie, rendu identique iOS / Android / web.
@@ -6,7 +7,7 @@ const W = 1080, H = 1350;
 const C = { brand: "#1B2B20", line: "#2C4434", paper: "#F5F1E6", peach: "#E9A27A", pale: "#C9D3C6", rust: "#C4622D" };
 
 function fmt(n) {
-  return Math.round(n || 0).toLocaleString("fr-FR").replace(/ | /g, " ");
+  return Math.round(n || 0).toLocaleString(locale()).replace(/ | /g, " ");
 }
 
 // Réduit la police jusqu'à ce que le texte tienne dans la largeur donnée.
@@ -57,17 +58,17 @@ export async function drawPassport({ name, role, count, km, dplus }) {
 
   ctx.fillStyle = C.peach;
   ctx.font = `500 30px ${MONO}`;
-  spaced(ctx, "PASSEPORT ULTRA", L, 170, 6);
+  spaced(ctx, t("PASSEPORT ULTRA"), L, 170, 6);
 
   ctx.fillStyle = C.paper;
-  const nameUp = (name || "Participant").toUpperCase();
+  const nameUp = (name || t("Participant")).toUpperCase();
   const ns = fit(ctx, nameUp, DISP, 120, W - L - 330);
   ctx.font = `${ns}px ${DISP}`;
   ctx.fillText(nameUp, L, 170 + 20 + ns);
 
   ctx.fillStyle = C.pale;
   ctx.font = `34px ${SANS}`;
-  ctx.fillText(role || "Participant", L, 170 + 20 + ns + 60);
+  ctx.fillText(role || t("Participant"), L, 170 + 20 + ns + 60);
 
   // Tampon « FINISHER ×n ».
   if (count > 0) {
@@ -93,9 +94,9 @@ export async function drawPassport({ name, role, count, km, dplus }) {
 
   // Les trois chiffres, l'un sous l'autre pour rester lisibles en story.
   const rows = [
-    [fmt(count), count > 1 ? "ULTRAS TERMINÉS" : "ULTRA TERMINÉ"],
-    [fmt(km), "KILOMÈTRES"],
-    [fmt(dplus), "MÈTRES DE D+"],
+    [fmt(count), count > 1 ? t("ULTRAS TERMINÉS") : t("ULTRA TERMINÉ")],
+    [fmt(km), t("KILOMÈTRES")],
+    [fmt(dplus), t("MÈTRES DE D+")],
   ];
   rows.forEach(([v, label], i) => {
     const y = 640 + i * 200;
@@ -128,8 +129,8 @@ export async function drawPassport({ name, role, count, km, dplus }) {
 export async function sharePassport(data) {
   const cv = await drawPassport(data);
   const dataUrl = cv.toDataURL("image/png");
-  const fileName = "passeport-ultra.png";
-  const text = "Mon Passeport Ultra sur ultraride.eu";
+  const fileName = t("passeport-ultra") + ".png";
+  const text = t("Mon Passeport Ultra sur ultraride.eu");
 
   if (isNative) {
     const { Filesystem, Directory } = await import("@capacitor/filesystem");
@@ -140,7 +141,7 @@ export async function sharePassport(data) {
       directory: Directory.Cache,
     });
     try {
-      await Share.share({ title: "Mon Passeport Ultra", text, files: [uri] });
+      await Share.share({ title: t("Mon Passeport Ultra"), text, files: [uri] });
       return "shared";
     } catch {
       return "cancelled"; // l'utilisateur a fermé la feuille de partage
@@ -151,7 +152,7 @@ export async function sharePassport(data) {
   const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
   const file = new File([blob], fileName, { type: "image/png" });
   if (navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: "Mon Passeport Ultra", text }); return "shared"; }
+    try { await navigator.share({ files: [file], title: t("Mon Passeport Ultra"), text }); return "shared"; }
     catch { return "cancelled"; }
   }
   const a = document.createElement("a");

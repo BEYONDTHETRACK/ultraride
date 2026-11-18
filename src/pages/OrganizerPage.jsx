@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { normalizeUrl, socialLink } from "../lib/organizerLinks";
 import RaceCard from "../components/RaceCard";
+import { t, locale } from "../lib/i18n";
 
 export default function OrganizerPage() {
   const { id } = useParams();
@@ -43,7 +44,7 @@ export default function OrganizerPage() {
   }, [id]);
 
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
-  if (!organizer) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">Chargement…</p></div>;
+  if (!organizer) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">{t("Chargement…")}</p></div>;
 
   const website = normalizeUrl(organizer.website);
   const instagram = socialLink(organizer.instagram, "https://instagram.com/");
@@ -60,7 +61,7 @@ export default function OrganizerPage() {
           <h1 className="h1" style={{ margin: 0 }}>{organizer.name}</h1>
           {(website || organizer.email || instagram || facebook || strava) && (
             <div className="organizer-links" style={{ marginTop: 10 }}>
-              {website && <a href={website} target="_blank" rel="noopener noreferrer" className="tag">Site web ↗</a>}
+              {website && <a href={website} target="_blank" rel="noopener noreferrer" className="tag">{t("Site web ↗")}</a>}
               {organizer.email && <a href={`mailto:${organizer.email}`} className="tag">Email</a>}
               {instagram && <a href={instagram} target="_blank" rel="noopener noreferrer" className="tag">Instagram ↗</a>}
               {facebook && <a href={facebook} target="_blank" rel="noopener noreferrer" className="tag">Facebook ↗</a>}
@@ -71,17 +72,17 @@ export default function OrganizerPage() {
       </div>
 
       {organizer.bio && (
-        <p className="organizer-page-bio">{organizer.bio}</p>
+        <p className="organizer-page-bio" lang="fr">{organizer.bio}</p>
       )}
 
       <div className="h2" style={{ marginTop: 32, marginBottom: 16 }}>
-        Ultras ({races === null ? "…" : races.length})
+        {t("Ultras")} ({races === null ? "…" : races.length})
       </div>
 
       {races === null ? (
-        <p className="muted">Chargement…</p>
+        <p className="muted">{t("Chargement…")}</p>
       ) : races.length === 0 ? (
-        <p className="muted">Aucun ultra publié pour l'instant.</p>
+        <p className="muted">{t("Aucun ultra publié pour l'instant.")}</p>
       ) : (
         <div className="race-grid">
           {races.map((r) => <RaceCard key={r.id} race={{ ...r, organizer: { name: organizer.name, logo_url: organizer.logo_url, id: organizer.id } }} />)}
@@ -90,14 +91,14 @@ export default function OrganizerPage() {
 
       {pastEditions.length > 0 && (
         <section style={{ marginTop: 36 }}>
-          <div className="h2" style={{ marginBottom: 12 }}>Éditions passées ({pastEditions.length})</div>
+          <div className="h2" style={{ marginBottom: 12 }}>{t("Éditions passées")} ({pastEditions.length})</div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {pastEditions.map((e) => {
               const y = e.start_date ? String(e.start_date).slice(0, 4) : e.next_edition;
               return (
                 <li key={e.id}>
                   <Link to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14, color: "var(--rust-text)" }}>
-                    {[e.name, e.edition ? `édition ${e.edition}` : null, y, e.km ? `${Number(e.km).toLocaleString("fr-FR")} km` : null].filter(Boolean).join(" — ")}
+                    {[e.name, e.edition ? t("édition {n}", { n: e.edition }) : null, y, e.km ? `${Number(e.km).toLocaleString(locale())} km` : null].filter(Boolean).join(" — ")}
                   </Link>
                 </li>
               );
@@ -107,7 +108,7 @@ export default function OrganizerPage() {
       )}
 
       <div style={{ marginTop: 32 }}>
-        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
+        <Link to="/" className="muted" style={{ fontSize: 13 }}>{t("← Tous les ultras")}</Link>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { isAppScreen } from "../mobile/routes";
 import { ThemeCycleButton, ThemeSegmented } from "./ThemeToggle";
+import { t, LangSwitch } from "../lib/i18n";
 
 const navClass = ({ isActive }) => (isActive ? "active" : "");
 
@@ -41,16 +42,16 @@ export default function Header() {
   // Liens principaux, partagés par la nav ordinateur et le panneau mobile.
   const mainLinks = (
     <>
-      <NavLink to="/" end className={navClass} onClick={close}>Découvrir</NavLink>
-      <NavLink to="/ultras" className={navClass} onClick={close}>Ultras</NavLink>
-      <NavLink to="/proposer-course" className={navClass} onClick={close}>Proposer un ultra</NavLink>
-      <NavLink to="/le-projet" className={navClass} onClick={close}>Le projet</NavLink>
-      <NavLink to="/mode-d-emploi" className={navClass} onClick={close}>Mode d'emploi</NavLink>
+      <NavLink to="/" end className={navClass} onClick={close}>{t("Découvrir")}</NavLink>
+      <NavLink to="/ultras" className={navClass} onClick={close}>{t("Ultras")}</NavLink>
+      <NavLink to="/proposer-course" className={navClass} onClick={close}>{t("Proposer un ultra")}</NavLink>
+      <NavLink to="/le-projet" className={navClass} onClick={close}>{t("Le projet")}</NavLink>
+      <NavLink to="/mode-d-emploi" className={navClass} onClick={close}>{t("Mode d'emploi")}</NavLink>
       {(isOrganizer || isAdmin) && (
-        <NavLink to="/organizer/races" className={navClass} onClick={close}>Mes ultras</NavLink>
+        <NavLink to="/organizer/races" className={navClass} onClick={close}>{t("Mes ultras")}</NavLink>
       )}
       {(isOrganizer || isAdmin) && (
-        <NavLink to="/organizer/profile" className={navClass} onClick={close}>Fiche organisateur</NavLink>
+        <NavLink to="/organizer/profile" className={navClass} onClick={close}>{t("Fiche organisateur")}</NavLink>
       )}
       {isAdmin && (
         <NavLink to="/admin" className={navClass} onClick={close}>Admin</NavLink>
@@ -63,14 +64,15 @@ export default function Header() {
       <NavLink to="/" className="brand">
         <img src="/logo.png" alt="UltraRide" className="brand-logo" />
       </NavLink>
-      <nav className="top-nav" aria-label="Navigation principale">{mainLinks}</nav>
+      <nav className="top-nav" aria-label={t("Navigation principale")}>{mainLinks}</nav>
       <div className="top-actions">
+        <LangSwitch />
         <ThemeCycleButton />
         <NavLink to={user ? "/account" : "/login"} className={({ isActive }) => `nav-passport${isActive ? " active" : ""}`}>
-          <PassportIcon />Mon passeport
+          <PassportIcon />{t("Mon passeport")}
         </NavLink>
         {user && (
-          <button type="button" className="nav-signout" onClick={signOut}>Déconnexion</button>
+          <button type="button" className="nav-signout" onClick={signOut}>{t("Déconnexion")}</button>
         )}
       </div>
       <button
@@ -85,18 +87,18 @@ export default function Header() {
       </button>
       {menuOpen && (
         <nav id="mobile-nav" className="mobile-nav" aria-label="Menu">
-          <ThemeSegmented />
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}><ThemeSegmented /><LangSwitch /></div>
           {mainLinks}
           {user ? (
             <>
-              <NavLink to="/account" className={navClass} onClick={close}>Mon passeport</NavLink>
-              <button onClick={() => { close(); signOut(); }}>Déconnexion</button>
+              <NavLink to="/account" className={navClass} onClick={close}>{t("Mon passeport")}</NavLink>
+              <button onClick={() => { close(); signOut(); }}>{t("Déconnexion")}</button>
             </>
           ) : (
             <>
-              <NavLink to="/login" className={navClass} onClick={close}>Connexion</NavLink>
+              <NavLink to="/login" className={navClass} onClick={close}>{t("Connexion")}</NavLink>
               <NavLink to="/login?mode=signup" className={(s) => `nav-cta ${navClass(s)}`} onClick={close}>
-                Créer un compte
+                {t("Créer un compte")}
               </NavLink>
             </>
           )}

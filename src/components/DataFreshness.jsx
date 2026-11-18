@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { t, locale } from "../lib/i18n";
 
 const fmtDate = (d) =>
-  new Date(d).toLocaleDateString("fr-FR", {
+  new Date(d).toLocaleDateString(locale(), {
     timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "numeric",
   });
 
 const fmtTime = (d) =>
   new Date(d)
-    .toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" })
-    .replace(":", "h");
+    .toLocaleTimeString(locale(), { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" })
+    .replace(":", locale() === "fr-FR" ? "h" : ":");
 
 export default function DataFreshness() {
   const [data, setData] = useState(null);
@@ -23,9 +24,9 @@ export default function DataFreshness() {
   if (!data || (!data.last_check && !data.last_update)) return null;
 
   const parts = [];
-  if (data.last_check) parts.push(`Vérifié le ${fmtDate(data.last_check)}`);
+  if (data.last_check) parts.push(t("Vérifié le {d}", { d: fmtDate(data.last_check) }));
   if (data.last_update) {
-    parts.push(`Dernière mise à jour le ${fmtDate(data.last_update)} à ${fmtTime(data.last_update)}`);
+    parts.push(t("Dernière mise à jour le {d} à {h}", { d: fmtDate(data.last_update), h: fmtTime(data.last_update) }));
   }
 
   return <div className="data-freshness">{parts.join(" · ")}</div>;

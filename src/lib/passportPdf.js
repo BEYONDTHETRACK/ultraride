@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { isNative } from "./native";
 import { PassportSheet } from "../pages/PalmaresSection";
+import { t } from "./i18n";
 
 // L'app n'a pas d'impression : on y produit le même Passeport Ultra que la
 // version imprimée du site. La fiche est rendue avec le même composant
@@ -85,13 +86,13 @@ export async function buildPassportPdf({ profile, user, results }) {
 // Ouvre la feuille de partage avec le PDF (Enregistrer dans Fichiers, Imprimer, Mail…).
 export async function sharePassportPdf(data) {
   const doc = await buildPassportPdf(data);
-  const fileName = "passeport-ultra.pdf";
+  const fileName = t("passeport-ultra") + ".pdf";
   if (isNative) {
     const { Filesystem, Directory } = await import("@capacitor/filesystem");
     const { Share } = await import("@capacitor/share");
     const base64 = doc.output("datauristring").split(",")[1];
     const { uri } = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
-    try { await Share.share({ title: "Mon Passeport Ultra", files: [uri] }); return "shared"; }
+    try { await Share.share({ title: t("Mon Passeport Ultra"), files: [uri] }); return "shared"; }
     catch { return "cancelled"; }
   }
   doc.save(fileName);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { popAfterLogin } from "../lib/authProviders";
+import { t } from "../lib/i18n";
 
 // Retour de Google / Apple. supabase-js lit les jetons dans l'URL
 // (detectSessionInUrl) ; on attend la session puis on renvoie l'utilisateur
@@ -33,7 +34,7 @@ export default function AuthCallback() {
       if (data.session) finish();
     });
     const t = setTimeout(() => {
-      if (!done) setError("La connexion n'a pas abouti. Réessaie depuis la page de connexion.");
+      if (!done) setError(t("La connexion n'a pas abouti. Réessaie depuis la page de connexion."));
     }, 10000);
     return () => {
       clearTimeout(t);
@@ -46,10 +47,10 @@ export default function AuthCallback() {
       {error ? (
         <>
           <div className="error-box" role="alert">{error}</div>
-          <Link to="/login" className="v2-btn v2-btn-rust">Retour à la connexion</Link>
+          <Link to="/login" className="v2-btn v2-btn-rust">{t("Retour à la connexion")}</Link>
         </>
       ) : (
-        <p>Connexion en cours…</p>
+        <p>{t("Connexion en cours…")}</p>
       )}
     </main>
   );

@@ -10,6 +10,7 @@ import { NotificationSettings } from "./NotificationSettings";
 import { isNative } from "../lib/native";
 import { sharePassport } from "../lib/sharePassport";
 import { sharePassportPdf } from "../lib/passportPdf";
+import { t, tn, LangSwitch } from "../lib/i18n";
 
 function Collapsible({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -51,8 +52,8 @@ export default function MobileAccount() {
   if (loading) return <div className="m-screen"><div className="m-skeleton" style={{ height: 260, margin: 20 }} /></div>;
   if (!user) return <Navigate to="/login" replace />;
 
-  const name = profile?.display_name || user.email?.split("@")[0] || "Participant";
-  const role = isAdmin ? "Admin" : isOrganizer ? "Organisateur" : "Participant";
+  const name = profile?.display_name || user.email?.split("@")[0] || t("Participant");
+  const role = isAdmin ? t("Admin") : isOrganizer ? t("Organisateur") : t("Participant");
 
   const onPdf = async () => {
     setSharing(true); setShareMsg("");
@@ -62,9 +63,9 @@ export default function MobileAccount() {
         .order("event_date", { ascending: false, nullsFirst: false });
       if (error) throw error;
       const res = await sharePassportPdf({ profile, user, results: data || [] });
-      if (res === "downloaded") setShareMsg("PDF enregistré dans tes téléchargements.");
+      if (res === "downloaded") setShareMsg(t("PDF enregistré dans tes téléchargements."));
     } catch {
-      setShareMsg("Impossible de créer le PDF du passeport. Réessaie.");
+      setShareMsg(t("Impossible de créer le PDF du passeport. Réessaie."));
     } finally {
       setSharing(false);
     }
@@ -74,9 +75,9 @@ export default function MobileAccount() {
     setSharing(true); setShareMsg("");
     try {
       const res = await sharePassport({ name, role, ...stats });
-      if (res === "downloaded") setShareMsg("Image enregistrée dans tes téléchargements.");
+      if (res === "downloaded") setShareMsg(t("Image enregistrée dans tes téléchargements."));
     } catch {
-      setShareMsg("Impossible de créer l'image du passeport. Réessaie.");
+      setShareMsg(t("Impossible de créer l'image du passeport. Réessaie."));
     } finally {
       setSharing(false);
     }
@@ -86,7 +87,7 @@ export default function MobileAccount() {
     <div className="m-screen">
       <div className="m-pad m-stack">
         <div className="m-topbar">
-          <h1 className="m-h1 m-h1--page">MON PASSEPORT</h1>
+          <h1 className="m-h1 m-h1--page">{t("MON PASSEPORT")}</h1>
           <MenuButton />
         </div>
 
@@ -98,14 +99,14 @@ export default function MobileAccount() {
           </svg>
           <div className="m-passport-top">
             <div className="m-passport-id">
-              <span className="m-label m-label--peach">PASSEPORT ULTRA</span>
+              <span className="m-label m-label--peach">{t("PASSEPORT ULTRA")}</span>
               <span className="m-passport-name">{name.toUpperCase()}</span>
               <span className="m-passport-role">{role}</span>
             </div>
             {stats.count > 0 && <Stamp top="FINISHER" big={`×${stats.count}`} rotate={10} />}
           </div>
           <div className="m-passport-stats">
-            <div><span className="m-passport-num">{stats.count}</span><span className="m-label m-label--pale">ULTRA{stats.count !== 1 ? "S" : ""}</span></div>
+            <div><span className="m-passport-num">{stats.count}</span><span className="m-label m-label--pale">{stats.count !== 1 ? t("ULTRAS") : t("ULTRA")}</span></div>
             <div><span className="m-passport-num">{formatNumber(stats.km)}</span><span className="m-label m-label--pale">KM</span></div>
             <div><span className="m-passport-num">{formatNumber(stats.dplus)}</span><span className="m-label m-label--pale">M D+</span></div>
           </div>
@@ -115,13 +116,13 @@ export default function MobileAccount() {
           <div className="m-stack m-stack--tight">
             <div style={{ display: "flex", gap: 10 }}>
               <button type="button" className="m-btn m-btn--ghost" style={{ flex: 1 }} disabled={sharing} onClick={onShare}>
-                <Icon name="share" size={18} /> Image
+                <Icon name="share" size={18} /> {t("Image")}
               </button>
               <button type="button" className="m-btn m-btn--ghost" style={{ flex: 1 }} disabled={sharing} onClick={onPdf}>
-                <Icon name="share" size={18} /> Passeport PDF
+                <Icon name="share" size={18} /> {t("Passeport PDF")}
               </button>
             </div>
-            {sharing && <p className="m-label" role="status" style={{ textAlign: "center" }}>Préparation…</p>}
+            {sharing && <p className="m-label" role="status" style={{ textAlign: "center" }}>{t("Préparation…")}</p>}
             {shareMsg && <p className="m-label" role="status" style={{ textAlign: "center" }}>{shareMsg}</p>}
           </div>
         )}
@@ -129,15 +130,15 @@ export default function MobileAccount() {
         {!isOrganizer && (
           <section className="m-section">
             <div className="m-section-head">
-              <h2 className="m-label m-label--strong">PALMARÈS</h2>
+              <h2 className="m-label m-label--strong">{t("PALMARÈS")}</h2>
               <button type="button" className="m-link m-link--btn" onClick={() => setManaging((v) => !v)}>
-                {managing ? "Fermer" : <><Icon name="plus" size={14} width={2.4} /> Ajouter / gérer</>}
+                {managing ? t("Fermer") : <><Icon name="plus" size={14} width={2.4} /> {t("Ajouter / gérer")}</>}
               </button>
             </div>
             {managing ? (
               <div className="m-legacy"><PalmaresSection embedded /></div>
             ) : results && results.length === 0 ? (
-              <div className="m-card m-geo"><p>Ajoute tes ultras terminés (fichier .FIT) pour remplir ton passeport.</p></div>
+              <div className="m-card m-geo"><p>{t("Ajoute tes ultras terminés (fichier .FIT) pour remplir ton passeport.")}</p></div>
             ) : (
               <div className="m-card m-list">
                 {(results || []).map((r) => (
@@ -158,9 +159,9 @@ export default function MobileAccount() {
 
         {!isOrganizer && (
           <section className="m-section">
-            <div className="m-section-head"><h2 className="m-label m-label--strong">MES FAVORIS</h2></div>
+            <div className="m-section-head"><h2 className="m-label m-label--strong">{t("MES FAVORIS")}</h2></div>
             {favorites && favorites.length === 0 ? (
-              <div className="m-card m-geo"><p>Touche le cœur d'une fiche pour la retrouver ici.</p></div>
+              <div className="m-card m-geo"><p>{t("Touche le cœur d'une fiche pour la retrouver ici.")}</p></div>
             ) : (
               <div className="m-hscroll">
                 {(favorites || []).map((f) => <MiniCard key={f.id} race={f.race} />)}
@@ -170,11 +171,12 @@ export default function MobileAccount() {
         )}
 
         <div className="m-legacy">
-          {!isOrganizer && <Collapsible title="MES AVIS"><CommentsSection /></Collapsible>}
-          <Collapsible title="MES INFORMATIONS"><InfoSection /></Collapsible>
-          {isNative && <Collapsible title="NOTIFICATIONS"><NotificationSettings /></Collapsible>}
-          <Collapsible title="MOT DE PASSE"><PasswordSection /></Collapsible>
-          <Collapsible title="SUPPRIMER MON COMPTE"><DangerZone /></Collapsible>
+          <Collapsible title={t("LANGUE")}><div style={{ padding: "4px 0" }}><LangSwitch /></div></Collapsible>
+          {!isOrganizer && <Collapsible title={t("MES AVIS")}><CommentsSection /></Collapsible>}
+          <Collapsible title={t("MES INFORMATIONS")}><InfoSection /></Collapsible>
+          {isNative && <Collapsible title={t("NOTIFICATIONS")}><NotificationSettings /></Collapsible>}
+          <Collapsible title={t("MOT DE PASSE")}><PasswordSection /></Collapsible>
+          <Collapsible title={t("SUPPRIMER MON COMPTE")}><DangerZone /></Collapsible>
         </div>
       </div>
     </div>

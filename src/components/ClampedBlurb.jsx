@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "../lib/i18n";
 
 // Description à 5 lignes fixes (98px, pas juste un max) avec bouton "Lire
 // plus" qui déplie le texte en place. Le zone est toujours rendue, même
@@ -47,7 +48,7 @@ export default function ClampedBlurb({ children, expanded, onToggle }) {
         aria-hidden={!truncated}
         tabIndex={truncated ? 0 : -1}
       >
-        {expanded ? "Lire moins" : "Lire plus →"}
+        {expanded ? t("Lire moins") : t("Lire plus →")}
       </button>
     </>
   );

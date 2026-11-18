@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { normalizeUrl, socialLink } from "../lib/organizerLinks";
+import { t } from "../lib/i18n";
 
 export default function OrganizerBox({ race }) {
   const org = race.organizer;
@@ -21,8 +22,8 @@ export default function OrganizerBox({ race }) {
         <img src={org.logo_url} alt="" className="organizer-logo" loading="lazy" decoding="async" />
       )}
       <div>
-        <div className="organizer-box-label">Organisé par</div>
-        <div className="organizer-box-name">{displayName || "Organisateur non précisé"}</div>
+        <div className="organizer-box-label">{t("Organisé par")}</div>
+        <div className="organizer-box-name">{displayName || t("Organisateur non précisé")}</div>
       </div>
     </>
   );
@@ -38,7 +39,7 @@ export default function OrganizerBox({ race }) {
       )}
       {(website || email || instagram || facebook || strava) && (
         <div className="organizer-links">
-          {website && <a href={website} target="_blank" rel="noopener noreferrer" className="tag">Site web ↗</a>}
+          {website && <a href={website} target="_blank" rel="noopener noreferrer" className="tag">{t("Site web ↗")}</a>}
           {email && <a href={`mailto:${email}`} className="tag">Email</a>}
           {instagram && <a href={instagram} target="_blank" rel="noopener noreferrer" className="tag">Instagram ↗</a>}
           {facebook && <a href={facebook} target="_blank" rel="noopener noreferrer" className="tag">Facebook ↗</a>}

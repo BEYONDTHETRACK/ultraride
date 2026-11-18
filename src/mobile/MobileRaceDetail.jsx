@@ -6,6 +6,8 @@ import { RaceMap, Comments } from "../pages/RaceDetail";
 import { daysUntil, formatDate, formatNumber } from "./data";
 import { isNative } from "../lib/native";
 import { Cover, Pill, Icon, useFavorite, disciplineBg, formatLabel } from "./ui";
+import TranslateButton from "../components/TranslateButton";
+import { t } from "../lib/i18n";
 
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
 
@@ -20,11 +22,11 @@ function Elevation({ profile }) {
   const line = "M" + pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ");
   return (
     <div className="m-card m-elev">
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={`Profil d'élévation, de ${Math.round(lo)} à ${Math.round(hi)} m`}>
+      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={t("Profil d'élévation, de {a} à {b} m", { a: Math.round(lo), b: Math.round(hi) })}>
         <path d={`${line} L ${w} ${h} L 0 ${h} Z`} style={{ fill: "var(--m-elev-fill)" }} />
         <path d={line} stroke="#B4541F" strokeWidth="2" fill="none" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className="m-elev-legend m-label"><span>{Math.round(lo)} m</span><span>max {Math.round(hi)} m</span></div>
+      <div className="m-elev-legend m-label"><span>{Math.round(lo)} m</span><span>{t("max {n} m", { n: Math.round(hi) })}</span></div>
     </div>
   );
 }
@@ -65,7 +67,7 @@ export default function MobileRaceDetail() {
       if (isNative) {
         // Feuille de partage iOS / Android (la vue web n'expose pas navigator.share).
         const { Share } = await import("@capacitor/share");
-        await Share.share({ title, text: title, url, dialogTitle: "Partager cet ultra" });
+        await Share.share({ title, text: title, url, dialogTitle: t("Partager cet ultra") });
       } else if (navigator.share) {
         await navigator.share({ title, url });
       } else {
@@ -78,10 +80,10 @@ export default function MobileRaceDetail() {
 
   const topButtons = (
     <div className="m-detail-top">
-      <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Retour" onClick={back}><Icon name="back" /></button>
+      <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={t("Retour")} onClick={back}><Icon name="back" /></button>
       <div className="m-detail-top-right">
-        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={shared ? "Lien copié" : "Partager"} onClick={share}><Icon name={shared ? "check" : "share"} size={18} /></button>
-        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={fav.isFav ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={fav.isFav} onClick={fav.toggle} disabled={fav.busy}>
+        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={shared ? t("Lien copié") : t("Partager")} onClick={share}><Icon name={shared ? "check" : "share"} size={18} /></button>
+        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={fav.isFav ? t("Retirer des favoris") : t("Ajouter aux favoris")} aria-pressed={fav.isFav} onClick={fav.toggle} disabled={fav.busy}>
           <Icon name="heart" fill={fav.isFav ? "#B4541F" : "none"} stroke="#B4541F" width={2} />
         </button>
       </div>
@@ -94,14 +96,14 @@ export default function MobileRaceDetail() {
   const j = daysUntil(race);
   const price = formatPrice(race.price);
   const loop = race.parcours === "boucle";
-  const from = (race.start_place || "Départ").split(",")[0];
-  const to = loop ? "Boucle" : (race.end_place || "Arrivée").split(",")[0];
+  const from = (race.start_place || t("Départ")).split(",")[0];
+  const to = loop ? t("Boucle") : (race.end_place || t("Arrivée")).split(",")[0];
   const stats = [
-    race.km && { label: "DISTANCE", value: `${formatNumber(race.km)} KM` },
-    race.dplus && { label: "DÉNIVELÉ +", value: `${formatNumber(race.dplus)} M` },
-    { label: "DÉPART", value: formatDate(race, { short: true }).toUpperCase() },
-    race.parcours && { label: "PARCOURS", value: (PARCOURS_LABEL[race.parcours] || race.parcours).toUpperCase() },
-    race.mode && !race.parcours && { label: "MODE", value: race.mode.toUpperCase() },
+    race.km && { label: t("DISTANCE"), value: `${formatNumber(race.km)} KM` },
+    race.dplus && { label: t("DÉNIVELÉ +"), value: `${formatNumber(race.dplus)} M` },
+    { label: t("DÉPART"), value: formatDate(race, { short: true }).toUpperCase() },
+    race.parcours && { label: t("PARCOURS"), value: t(PARCOURS_LABEL[race.parcours] || race.parcours).toUpperCase() },
+    race.mode && !race.parcours && { label: t("MODE"), value: t(race.mode).toUpperCase() },
   ].filter(Boolean).slice(0, 4);
   const ctaUrl = race.registration_url || race.organizer?.website;
 
@@ -111,9 +113,9 @@ export default function MobileRaceDetail() {
         {topButtons}
         <div className="m-cover-bottom">
           <div className="m-cover-tags m-cover-tags--static">
-            {race.discipline && <Pill>{race.discipline.toUpperCase()}</Pill>}
+            {race.discipline && <Pill>{t(race.discipline).toUpperCase()}</Pill>}
             {race.format && <Pill tone="solid" bg="#000">{formatLabel(race.format).toUpperCase()}</Pill>}
-            {race.mode && <Pill tone="glass">{race.mode.toUpperCase()}</Pill>}
+            {race.mode && <Pill tone="glass">{t(race.mode).toUpperCase()}</Pill>}
           </div>
           <h1 className="m-detail-title">{race.name}</h1>
         </div>
@@ -126,10 +128,10 @@ export default function MobileRaceDetail() {
               <span className="m-org-badge">
                 {race.organizer.logo_url ? <img src={race.organizer.logo_url} alt="" /> : initials(race.organizer.name)}
               </span>
-              <span className="m-org-text"><span className="m-org-by">Organisé par</span><span className="m-org-name">{race.organizer.name}</span></span>
+              <span className="m-org-text"><span className="m-org-by">{t("Organisé par")}</span><span className="m-org-name">{race.organizer.name}</span></span>
             </Link>
           ) : <span />}
-          {j != null && <span className="m-label m-label--rust">J-{j}</span>}
+          {j != null && <span className="m-label m-label--rust">{t("J-{n}", { n: j })}</span>}
         </div>
 
         <div className="m-stats4">
@@ -142,7 +144,7 @@ export default function MobileRaceDetail() {
         </div>
 
         <div className="m-stack m-stack--tight">
-          <h2 className="m-label m-label--strong">ROADBOOK</h2>
+          <h2 className="m-label m-label--strong">{t("ROADBOOK")}</h2>
           <div className="m-roadbook">
             <span className="m-rb-dot" />
             <span className="m-rb-place">{from}</span>
@@ -156,32 +158,37 @@ export default function MobileRaceDetail() {
           <div className="m-detail-map"><RaceMap race={race} /></div>
         </div>
 
-        {(race.long_blurb || race.blurb) && <p className="m-body">{race.long_blurb || race.blurb}</p>}
+        {(race.long_blurb || race.blurb) && (
+          <div>
+            <p className="m-body" lang="fr">{race.long_blurb || race.blurb}</p>
+            <TranslateButton text={race.long_blurb || race.blurb} />
+          </div>
+        )}
 
         <div className="m-facts">
-          {race.country && <div><span className="m-label">PAYS</span><span>{race.country}</span></div>}
-          {race.mode && <div><span className="m-label">MODE</span><span>{race.mode}</span></div>}
-          {race.departure_time && <div><span className="m-label">HEURE DE DÉPART</span><span>{race.departure_time}</span></div>}
-          <div><span className="m-label">INSCRIPTIONS</span><span>{race.open ? "Ouvertes" : "Fermées ou à venir"}</span></div>
+          {race.country && <div><span className="m-label">{t("PAYS")}</span><span>{t(race.country)}</span></div>}
+          {race.mode && <div><span className="m-label">{t("MODE")}</span><span>{t(race.mode)}</span></div>}
+          {race.departure_time && <div><span className="m-label">{t("HEURE DE DÉPART")}</span><span>{race.departure_time}</span></div>}
+          <div><span className="m-label">{t("INSCRIPTIONS")}</span><span>{race.open ? t("Ouvertes") : t("Fermées ou à venir")}</span></div>
         </div>
 
-        <p className="m-note">Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.</p>
+        <p className="m-note">{t("Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.")}</p>
 
         <div className="m-comments"><Comments raceId={race.id} /></div>
       </div>
 
       <div className="m-ctabar">
         <div className="m-ctabar-price">
-          <span className="m-label">TARIF</span>
-          <span className="m-ctabar-val">{price || "Voir le site"}</span>
+          <span className="m-label">{t("TARIF")}</span>
+          <span className="m-ctabar-val">{price || t("Voir le site")}</span>
         </div>
         {ctaUrl ? (
           <a href={ctaUrl} target="_blank" rel="noopener noreferrer" className="m-btn m-btn--primary m-btn--grow">
-            {race.registration_url ? "S'inscrire" : "Site de l'organisateur"} <Icon name="external" size={16} width={2.4} />
+            {race.registration_url ? t("S'inscrire") : t("Site de l'organisateur")} <Icon name="external" size={16} width={2.4} />
           </a>
         ) : (
           <button type="button" className="m-btn m-btn--primary m-btn--grow" onClick={fav.toggle}>
-            {fav.isFav ? "Dans tes favoris" : "Ajouter aux favoris"}
+            {fav.isFav ? t("Dans tes favoris") : t("Ajouter aux favoris")}
           </button>
         )}
       </div>

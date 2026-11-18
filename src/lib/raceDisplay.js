@@ -1,3 +1,4 @@
+import { t, trObj, locale, isEn } from "./i18n";
 // Libellés, couleurs et dates partagés par les pages de la version web v2.
 
 export const DISCIPLINE_COLOR = {
@@ -12,9 +13,9 @@ export function disciplineColor(d) {
   return DISCIPLINE_COLOR[d] || DEFAULT_DISCIPLINE_COLOR;
 }
 
-export const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
+export const FORMAT_LABEL = trObj({ course: "Course", aventure: "Aventure", endurance: "Endurance" });
 export const FORMAT_BG = { course: "#000000", aventure: "#8A6220", endurance: "#B3382C" };
-export const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
+export const PARCOURS_LABEL = trObj({ boucle: "Boucle", point: "Point à point", ar: "Aller-retour" });
 
 const MONTHS_SHORT = ["JANV.", "FÉVR.", "MARS", "AVR.", "MAI", "JUIN", "JUIL.", "AOÛT", "SEPT.", "OCT.", "NOV.", "DÉC."];
 const MONTHS_LONG = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -44,9 +45,9 @@ export function daysUntil(race) {
 export function countdownLabel(race) {
   const n = daysUntil(race);
   if (n === null) return null;
-  if (n === 0) return "Aujourd'hui";
+  if (n === 0) return t("Aujourd'hui");
   if (n < 0) return null;
-  return `J-${n}`;
+  return t("J-{n}", { n });
 }
 
 export function isUpcoming(race) {
@@ -56,15 +57,15 @@ export function isUpcoming(race) {
 
 export function dateTileParts(race) {
   const d = parseDate(race?.start_date);
-  if (d) return { day: String(d.getDate()), month: MONTHS_SHORT[d.getMonth()] };
+  if (d) return { day: String(d.getDate()), month: t(MONTHS_SHORT[d.getMonth()]) };
   const i = MONTH_NAMES.indexOf(race?.month);
-  return { day: "—", month: i >= 0 ? MONTHS_SHORT[i] : "DATE ?" };
+  return { day: "—", month: t(i >= 0 ? MONTHS_SHORT[i] : "DATE ?") };
 }
 
 export function formatLongDate(str) {
   const d = parseDate(str);
   if (!d) return null;
-  return `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
+  return d.toLocaleDateString(locale(), { day: "numeric", month: "long", year: "numeric" });
 }
 
 const MONTHS_ABBR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
@@ -72,7 +73,7 @@ const MONTHS_ABBR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", 
 export function formatShortDate(str) {
   const d = parseDate(str);
   if (!d) return null;
-  return `${d.getDate()} ${MONTHS_ABBR[d.getMonth()]} ${d.getFullYear()}`;
+  return d.toLocaleDateString(locale(), { day: "numeric", month: "short", year: "numeric" });
 }
 
 // Clé de regroupement par mois pour la liste : "2027-03" et son libellé.
@@ -81,24 +82,24 @@ export function monthGroup(race) {
   if (d) {
     return {
       key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: `${MONTH_NAMES[d.getMonth()].toUpperCase()} ${d.getFullYear()}`,
+      label: `${t(MONTH_NAMES[d.getMonth()]).toUpperCase()} ${d.getFullYear()}`,
     };
   }
-  return { key: "9999", label: "DATE À CONFIRMER" };
+  return { key: "9999", label: t("DATE À CONFIRMER") };
 }
 
 export function formatNumber(n) {
   if (n === null || n === undefined || n === "") return null;
   const v = Number(n);
   if (Number.isNaN(v)) return null;
-  return Math.round(v).toLocaleString("fr-FR");
+  return Math.round(v).toLocaleString(locale());
 }
 
 export function statsLine(race, { withPrice = false } = {}) {
   const parts = [];
   if (race.km) parts.push(`${formatNumber(race.km)} km`);
   if (race.dplus && Number(race.dplus) > 100) parts.push(`${formatNumber(race.dplus)} m D+`);
-  if (withPrice && race.price) parts.push(`${formatNumber(race.price)} €`);
+  if (withPrice && race.price) parts.push(isEn() ? `€${formatNumber(race.price)}` : `${formatNumber(race.price)} €`);
   return parts.join(" · ");
 }
 
@@ -107,7 +108,7 @@ export function placeLine(race) {
   const end = race.end_place;
   let route = start || "";
   if (start && end && race.parcours !== "boucle" && end !== start) route = `${start} → ${end}`;
-  const country = race.country && !normalize(route).includes(normalize(race.country)) ? race.country : null;
+  const country = race.country && !normalize(route).includes(normalize(race.country)) ? t(race.country) : null;
   return [route, country].filter(Boolean).join(" · ");
 }
 

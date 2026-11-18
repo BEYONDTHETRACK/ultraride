@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
+import { t } from "../lib/i18n";
 
 // Reached via the link in a "reset password" email. Supabase exchanges the
 // URL token for a temporary recovery session automatically (it fires a
@@ -43,14 +44,14 @@ export default function ResetPassword() {
 
   return (
     <div className="wrap" style={{ paddingTop: 60, maxWidth: 420 }}>
-      <h1 className="h1">Nouveau mot de passe</h1>
+      <h1 className="h1">{t("Nouveau mot de passe")}</h1>
       {!ready ? (
-        <p className="muted">Vérification du lien de réinitialisation…</p>
+        <p className="muted">{t("Vérification du lien de réinitialisation…")}</p>
       ) : (
         <form onSubmit={handleSubmit}>
           {error && <div className="error-box">{error}</div>}
           <div className="field">
-            <label>Nouveau mot de passe</label>
+            <label>{t("Nouveau mot de passe")}</label>
             <input
               type="password"
               required
@@ -59,10 +60,10 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <div className="field-hint">{PASSWORD_HINT}</div>
+            <div className="field-hint">{t(PASSWORD_HINT)}</div>
           </div>
           <button className="btn btn-primary" type="submit" disabled={saving}>
-            {saving ? "Enregistrement…" : "Définir ce mot de passe"}
+            {saving ? t("Enregistrement…") : t("Définir ce mot de passe")}
           </button>
         </form>
       )}

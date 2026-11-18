@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { trackEvent } from "../lib/analytics";
+import { t } from "../lib/i18n";
 
 // Page « Mes liens » pour la bio Instagram / Facebook.
 // URL à mettre en bio (les paramètres utm_ servent à GA4) :
@@ -44,7 +45,7 @@ export default function Links() {
   const [state, setState] = useState({ status: "idle", msg: "" });
 
   useEffect(() => {
-    document.title = "UltraRide — liens";
+    document.title = t("UltraRide — liens");
     // Fond parchemin jusqu'en bas de l'écran.
     const prev = document.body.style.background;
     document.body.style.background = "#F5F1E6";
@@ -57,11 +58,11 @@ export default function Links() {
     e.preventDefault();
     const value = email.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
-      setState({ status: "error", msg: "Vérifie ton adresse e-mail." });
+      setState({ status: "error", msg: t("Vérifie ton adresse e-mail.") });
       return;
     }
     if (!consent) {
-      setState({ status: "error", msg: "Coche la case pour recevoir la newsletter." });
+      setState({ status: "error", msg: t("Coche la case pour recevoir la newsletter.") });
       return;
     }
     setState({ status: "sending", msg: "" });
@@ -69,13 +70,13 @@ export default function Links() {
       .from("newsletter_signups")
       .insert({ email: value, consent: true, source: "liens", utm_source: source });
     if (error) {
-      setState({ status: "error", msg: "L'inscription n'a pas fonctionné. Réessaie dans un instant." });
+      setState({ status: "error", msg: t("L'inscription n'a pas fonctionné. Réessaie dans un instant.") });
       return;
     }
     trackEvent("newsletter_signup", { source, method: "bio" });
     setEmail("");
     setConsent(false);
-    setState({ status: "done", msg: "C'est noté ! Tu recevras les nouveautés UltraRide." });
+    setState({ status: "done", msg: t("C'est noté ! Tu recevras les nouveautés UltraRide.") });
   };
 
   return (
@@ -87,54 +88,54 @@ export default function Links() {
             <span className="u">U</span><span className="r">R</span>
           </div>
           <h1>Ultra<em>Ride</em></h1>
-          <p>Le calendrier des ultras vélo en Europe</p>
+          <p>{t("Le calendrier des ultras vélo en Europe")}</p>
         </header>
 
-        <section className="lk-app" aria-label="L'app UltraRide">
-          <span className="lk-kicker">L'app est sortie</span>
+        <section className="lk-app" aria-label={t("L'app UltraRide")}>
+          <span className="lk-kicker">{t("L'app est sortie")}</span>
           <div className="lk-stores">
             <a href={APP_STORE} target="_blank" rel="noopener noreferrer" onClick={click("app_store")}>
-              <small>Télécharger sur</small>App Store
+              <small>{t("Télécharger sur")}</small>App Store
             </a>
             <a href={GOOGLE_PLAY} target="_blank" rel="noopener noreferrer" onClick={click("google_play")}>
-              <small>Disponible sur</small>Google Play
+              <small>{t("Disponible sur")}</small>Google Play
             </a>
           </div>
         </section>
 
-        <nav className="lk-list" aria-label="Liens UltraRide">
+        <nav className="lk-list" aria-label={t("Liens UltraRide")}>
           {LINKS.map((l) => (
             <Link key={l.id} to={l.to} onClick={click(l.id)}>
-              <b>{l.title}</b>
-              <span>{l.sub}</span>
+              <b>{t(l.title)}</b>
+              <span>{t(l.sub)}</span>
               <i aria-hidden="true">→</i>
             </Link>
           ))}
         </nav>
 
         <form className="lk-news" onSubmit={subscribe} noValidate>
-          <label htmlFor="lk-email" className="lk-kicker">La newsletter</label>
-          <p>Les nouveaux ultras et les ouvertures d'inscriptions, dans ta boîte mail.</p>
+          <label htmlFor="lk-email" className="lk-kicker">{t("La newsletter")}</label>
+          <p>{t("Les nouveaux ultras et les ouvertures d'inscriptions, dans ta boîte mail.")}</p>
           <div className="lk-row">
             <input
               id="lk-email"
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder="ton@email.fr"
+              placeholder={t("ton@email.fr")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={state.status === "sending"}
             />
             <button type="submit" disabled={state.status === "sending"}>
-              {state.status === "sending" ? "…" : "Je m'inscris"}
+              {state.status === "sending" ? "…" : t("Je m'inscris")}
             </button>
           </div>
           <label className="lk-consent">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>
-              J'accepte de recevoir la newsletter d'UltraRide. Désinscription en un clic.{" "}
-              <Link to="/confidentialite">Confidentialité</Link>
+              {t("J'accepte de recevoir la newsletter d'UltraRide. Désinscription en un clic.")}{" "}
+              <Link to="/confidentialite">{t("Confidentialité")}</Link>
             </span>
           </label>
           {state.msg && (
