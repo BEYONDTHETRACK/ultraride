@@ -32,15 +32,15 @@ const EMOJI = "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-s
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 
-// Fond autour de la carte. Pour varier le mur Instagram, les racecards tournent
-// sur trois couleurs (vert foncé → vert → rouille) ; le parchemin reste dispo.
+// Fond autour de la carte : une couleur par pratique (Route = vert foncé,
+// Gravel = vert, VTT = rouille) ; le parchemin reste dispo à la main.
 export const FRAMES = {
   dark: { label: "Vert foncé", bg: "#1B2B20", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.35)" },
   green: { label: "Vert", bg: "#15793F", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
   rust: { label: "Rouille", bg: "#C4622D", sign: "#F5F1E6", shadow: "rgba(0,0,0,0.28)" },
   parchment: { label: "Parchemin", bg: "#F5F1E6", sign: "#C4622D", shadow: "rgba(27,43,32,0.14)" },
 };
-export const FRAME_ROTATION = ["dark", "green", "rust"];
+export const FRAME_BY_DISCIPLINE = { Route: "dark", Gravel: "green", VTT: "rust" };
 
 const CARD = { x: 80, y: 64, w: 920, h: 1150, r: 48, pad: 48 };
 
@@ -315,7 +315,7 @@ export async function renderRacecard(canvas, race, frameKey = "parchment") {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, W, H);
 
-  // Fond (couleur de la rotation)
+  // Fond (couleur de la pratique)
   ctx.fillStyle = frame.bg;
   ctx.fillRect(0, 0, W, H);
 
@@ -776,10 +776,9 @@ export default function InstagramGenerator() {
     setIgSaved(true);
   };
 
-  // Couleur proposée : la suivante dans la rotation, d'après le nombre de
-  // racecards déjà publiées. Modifiable à la main avec les pastilles.
-  const publishedCount = Object.values(posts).filter((p) => p?.published_at).length;
-  const suggestedFrame = FRAME_ROTATION[publishedCount % FRAME_ROTATION.length];
+  // Couleur proposée : celle de la pratique de l'ultra. Modifiable à la main
+  // avec les pastilles.
+  const suggestedFrame = FRAME_BY_DISCIPLINE[selected?.discipline] || "parchment";
   const currentFrame = frameKey || suggestedFrame;
 
   useEffect(() => {
@@ -917,7 +916,7 @@ export default function InstagramGenerator() {
                   key={key}
                   type="button"
                   onClick={() => setFrameKey(key)}
-                  title={key === suggestedFrame ? `${f.label} (suivant dans la rotation)` : f.label}
+                  title={key === suggestedFrame ? `${f.label} (couleur de la pratique)` : f.label}
                   aria-pressed={currentFrame === key}
                   style={{
                     width: 30, height: 30, borderRadius: "50%", background: f.bg, cursor: "pointer",
@@ -927,7 +926,7 @@ export default function InstagramGenerator() {
                 />
               ))}
               <span className="muted mono" style={{ fontSize: 11 }}>
-                {FRAMES[currentFrame].label}{currentFrame === suggestedFrame ? " · suivant dans la rotation" : ""}
+                {FRAMES[currentFrame].label}{currentFrame === suggestedFrame ? " · couleur de la pratique" : ""}
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "12px 0" }}>
