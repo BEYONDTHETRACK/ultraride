@@ -35,6 +35,9 @@ export default function Header() {
 
   const close = () => setMenuOpen(false);
 
+  // Page « Mes liens » (bio Instagram / Facebook) : affichée sans l'en-tête du site.
+  if (location.pathname === "/liens") return null;
+
   // Liens principaux, partagés par la nav ordinateur et le panneau mobile.
   const mainLinks = (
     <>

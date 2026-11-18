@@ -53,6 +53,13 @@ export function trackPageView(path) {
   });
 }
 
+// Événement GA4 personnalisé (clics de la page « Mes liens », inscriptions…).
+// Rien n'est envoyé tant que le visiteur n'a pas accepté les cookies.
+export function trackEvent(name, params = {}) {
+  if (!loaded || !window.gtag) return;
+  window.gtag("event", name, params);
+}
+
 function removeGACookies() {
   const domains = [window.location.hostname, "." + window.location.hostname.replace(/^www\./, "")];
   document.cookie.split(";").forEach((c) => {

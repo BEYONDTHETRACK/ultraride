@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 // Passer en "_v2" pour réafficher la modale à tout le monde (texte modifié).
 const STORAGE_KEY = "ultraride_disclaimer_v1";
@@ -37,8 +37,11 @@ export default function DisclaimerModal() {
   const dialogRef = useRef(null);
   const buttonRef = useRef(null);
 
+  const { pathname } = useLocation();
+
   useEffect(() => {
-    if (wasDismissed()) return;
+    // Pas d'avertissement sur la page « Mes liens » : on y passe en coup de vent.
+    if (wasDismissed() || pathname === "/liens") return;
     const timer = setTimeout(() => setOpen(true), OPEN_DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
