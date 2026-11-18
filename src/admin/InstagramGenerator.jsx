@@ -585,15 +585,22 @@ function buildCaption(race) {
   // Sans compte Instagram, pas de ligne organisateur du tout.
   const org = handle ? `Organisé par ${handle}` : null;
 
-  const disciplineTag = race.discipline ? `#${normalize(race.discipline).replace(/[^a-z0-9]/g, "")}` : null;
-  const tags = ["#ultracycling", "#ultradistance", "#bikepacking", disciplineTag, "#ultraride"]
-    .filter(Boolean).join(" ");
+  // 5 hashtags max (limite Instagram), #UltraRide en premier, puis selon la pratique.
+  const isBrm = /\bBRM\b/i.test(race.name || "");
+  const TAGS_BY_DISCIPLINE = {
+    Route: ["#ultracycling", "#ultradistance", "#roadcycling", isBrm ? "#randonneuring" : "#longdistancecycling"],
+    Gravel: ["#ultracycling", "#gravelbike", "#bikepacking", "#gravelcycling"],
+    VTT: ["#bikepacking", "#mtb", "#mtbadventure", "#ultracycling"],
+  };
+  const tags = ["#UltraRide", ...(TAGS_BY_DISCIPLINE[race.discipline] || ["#ultracycling", "#ultradistance", "#bikepacking"])]
+    .slice(0, 5).join(" ");
 
   const blocks = [
     first,
     [where && `📍 ${where}`, what && `🚴 ${what}`].filter(Boolean).join("\n"),
     org,
-    "👉 Toutes les infos sur ultraride.eu",
+    // Pas d'URL dans les légendes (non cliquable sur Instagram) : on renvoie à la bio.
+    "👉 Toutes les infos : lien en bio",
     tags,
   ];
   return blocks.filter(Boolean).join("\n\n");
