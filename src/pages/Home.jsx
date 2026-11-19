@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import SiteFooter from "../components/SiteFooter";
 import DataFreshness from "../components/DataFreshness";
+import SearchSuggest from "../components/SearchSuggest";
 import { RaceRow, RaceTile, DisciplineBadge, FormatBadge } from "../components/RaceBits";
 import {
   LIST_COLUMNS, DISCIPLINE_COLOR, isUpcoming, byStartDate, countdownLabel,
@@ -15,14 +16,6 @@ import { t } from "../lib/i18n";
 const NEARBY_RADIUS_KM = 400;
 const NEARBY_LIMIT = 4;
 const DISCIPLINES = ["Route", "Gravel", "VTT"];
-
-function SearchIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-    </svg>
-  );
-}
 
 // Courbes de niveau du bloc « À la une », plus un tracé quand l'ultra n'a pas de visuel.
 function FeatureArt({ withRoute }) {
@@ -243,19 +236,14 @@ export default function Home() {
               {t("Route, gravel et VTT en autonomie, en Europe et en Afrique du Nord. Les dates, les parcours et les inscriptions au même endroit.")}
             </p>
 
-            <form className="v2-search" onSubmit={submitSearch} role="search">
-              <label className="v2-search-field">
-                <SearchIcon />
-                <span className="sr-only">{t("Rechercher un ultra")}</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("Nom, pays, organisateur…")}
-                />
-              </label>
-              <button type="submit" className="v2-btn v2-btn-rust">{t("Rechercher")}</button>
-            </form>
+            <SearchSuggest
+              races={races}
+              query={query}
+              setQuery={setQuery}
+              onSubmit={submitSearch}
+              placeholder={t("Nom, pays, organisateur…")}
+              label={t("Rechercher un ultra")}
+            />
 
             <div className="v2-chips">
               <Link to="/ultras" className="v2-chip v2-chip-active">{t("Tous")}</Link>
