@@ -573,6 +573,7 @@ export default {
  "Effacer": "Clear",
  "{n} ultra": "{n} ultra",
  "{n} ultras": "{n} ultras",
+ "Voir tous les résultats pour « {q} »": "See all results for “{q}”",
  "inscriptions ouvertes": "registration open",
  "dans la zone visible": "in the visible area",
  "Nom, lieu, pays, organisateur…": "Name, place, country, organiser…",
