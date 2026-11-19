@@ -7,7 +7,7 @@ import { t, locale } from "../lib/i18n";
 // onglets Découvrir / Ultras / Carte : passer d'un onglet à l'autre est
 // instantané, comme dans une app.
 const FIELDS =
-  "id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_place, end_place, start_date, created_at, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)";
+  "id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_place, end_place, start_date, created_at, view_count, blurb, blurb_en, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)";
 
 let cache = null;
 let pending = null;

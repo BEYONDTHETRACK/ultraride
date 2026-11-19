@@ -25,7 +25,7 @@ export default function OrganizerPage() {
 
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, blurb, image_url")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, blurb, blurb_en, image_url")
       .eq("organizer_id", id)
       .eq("status", "published")
       .eq("is_current", true)
