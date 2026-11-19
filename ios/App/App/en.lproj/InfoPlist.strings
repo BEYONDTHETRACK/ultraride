@@ -1,0 +1,6 @@
+/* Permission prompts — English */
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "UltraRide uses your location, only while the app is open, to show you the ultras starting near you. It is never stored or shared.";
+"NSLocationWhenInUseUsageDescription" = "UltraRide uses your location to show you the ultras starting near you. It is never stored or shared.";
+"NSPhotoLibraryAddUsageDescription" = "UltraRide saves your Ultra Passport image to your photos when you ask it to.";
+"NSPhotoLibraryUsageDescription" = "UltraRide only accesses your photos to let you pick an image, for example your ultra's logo.";
+"NSCameraUsageDescription" = "UltraRide only uses the camera if you choose to take a photo, for example for your ultra's logo.";
