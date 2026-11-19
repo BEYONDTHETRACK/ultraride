@@ -23,7 +23,7 @@ const EMPTY = {
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   start_date: "", end_date: "", registration_url: "",
-  organizer_name: "", blurb: "", blurb_en: "", long_blurb: "",
+  organizer_name: "", blurb: "", blurb_en: "", long_blurb: "", long_blurb_en: "", en_reviewed: false,
   event_name: "",
   status: "published", organizer_id: "", image_url: "",
   edition: "",
@@ -44,7 +44,7 @@ const ALLOWED_COLUMNS = [
   "name","country","discipline","format","mode","parcours","month","km","dplus","open",
   "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
   "start_place","end_place","departure_time","start_date","end_date",
-  "organizer_name","organizer_id","terrain","next_edition","blurb","blurb_en","long_blurb",
+  "organizer_name","organizer_id","terrain","next_edition","blurb","blurb_en","long_blurb","long_blurb_en","en_reviewed",
   "status","image_url","registration_url","event_name","event_slug","price","edition"
 ];
 
@@ -169,6 +169,39 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   };
 
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+  // Une correction à la main de l'anglais le marque « relu » : il ne sera plus
+  // écrasé par la traduction automatique.
+  const fieldEn = (key, value) => setForm((f) => ({ ...f, [key]: value, en_reviewed: true }));
+
+  // Version anglaise : traduite automatiquement à la publication (Edge
+  // Function translate-race). enStale = le français enregistré a changé depuis
+  // la dernière version anglaise relue.
+  const [enStale, setEnStale] = useState(false);
+  const [enBusy, setEnBusy] = useState(false);
+  const [enMsg, setEnMsg] = useState(null);
+  useEffect(() => {
+    if (!race?.id || !race.en_reviewed) return;
+    supabase.rpc("race_fr_md5", { p_blurb: race.blurb, p_long: race.long_blurb, p_terrain: race.terrain })
+      .then(({ data }) => setEnStale(!!data && data !== race.en_source_md5));
+  }, [race?.id]);
+  const frUnsaved = !!race?.id && ((form.blurb || "") !== (race.blurb || "") || (form.long_blurb || "") !== (race.long_blurb || ""));
+  const regenerateEn = async () => {
+    if (!race?.id || frUnsaved) {
+      setEnMsg("Enregistre d'abord la fiche : la traduction part du texte français enregistré.");
+      return;
+    }
+    setEnBusy(true);
+    setEnMsg(null);
+    const { data, error } = await supabase.functions.invoke("translate-race", { body: { race_id: race.id, force: true } });
+    setEnBusy(false);
+    if (error || !data || data.error) {
+      setEnMsg("La traduction n'a pas abouti, réessaie dans un instant.");
+      return;
+    }
+    setForm((f) => ({ ...f, blurb_en: data.blurb_en || "", long_blurb_en: data.long_blurb_en || "", en_reviewed: false }));
+    setEnStale(false);
+    setEnMsg("Version anglaise régénérée à partir du français.");
+  };
   const numOrNull = (v) => (v === "" || v === null ? null : Number(v));
 
   const handleSubmit = async (e) => {
@@ -605,16 +638,43 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       </div>
 
       <div className="field">
-        <label>Description courte en anglais</label>
-        <textarea rows={2} value={form.blurb_en || ""} onChange={(e) => field("blurb_en", e.target.value)}
-          placeholder="Short description in English, used on the bilingual Instagram cards." />
-        <div className={`field-hint${(form.blurb_en || "").length > 120 ? " rf-over" : ""}`}>{(form.blurb_en || "").length} / 120 caractères conseillés pour la vignette Instagram</div>
-      </div>
-
-      <div className="field">
         <label>Description longue *</label>
         <textarea required rows={6} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)}
           placeholder="Le parcours, les points de passage, le règlement, l'esprit de l'épreuve…" />
+      </div>
+
+      <div className="rf-en">
+        <div className="rf-en-head">
+          <strong>🇬🇧 Version anglaise</strong>
+          <span className={`rf-en-tag${form.en_reviewed ? " is-reviewed" : ""}`}>
+            {form.en_reviewed ? "Relue" : (form.long_blurb_en || form.blurb_en) ? "Traduite automatiquement" : "Traduite automatiquement à la publication"}
+          </span>
+        </div>
+        <p className="field-hint" style={{ marginTop: 0 }}>
+          Elle s'affiche aux visiteurs qui consultent UltraRide en anglais. Tu peux la corriger : une version corrigée n'est plus remplacée automatiquement.
+        </p>
+        {enStale && (
+          <p className="rf-en-warn">Le texte français a changé depuis cette version anglaise. Régénère-la ou mets-la à jour à la main.</p>
+        )}
+        <div className="field">
+          <label>Short description (English)</label>
+          <textarea rows={2} value={form.blurb_en || ""} onChange={(e) => fieldEn("blurb_en", e.target.value)}
+            placeholder="Short description in English, also used on the bilingual Instagram cards." />
+          <div className={`field-hint${(form.blurb_en || "").length > 120 ? " rf-over" : ""}`}>{(form.blurb_en || "").length} / 120 caractères conseillés pour la vignette Instagram</div>
+        </div>
+        <div className="field">
+          <label>Full description (English)</label>
+          <textarea rows={6} value={form.long_blurb_en || ""} onChange={(e) => fieldEn("long_blurb_en", e.target.value)}
+            placeholder="The route, checkpoints, rules, the spirit of the event…" />
+        </div>
+        {race?.id && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <button type="button" className="btn" onClick={regenerateEn} disabled={enBusy}>
+              {enBusy ? "Traduction en cours…" : "Régénérer depuis le français"}
+            </button>
+            {enMsg && <span className="field-hint">{enMsg}</span>}
+          </div>
+        )}
       </div>
       </Section>
 

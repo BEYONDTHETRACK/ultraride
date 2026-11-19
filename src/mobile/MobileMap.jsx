@@ -4,6 +4,7 @@ import L from "leaflet";
 import { useRaces, useGeo, startCoords, isUpcoming, daysUntil } from "./data";
 import { Icon, Pill, Stat, raceStats, disciplineBg } from "./ui";
 import { t } from "../lib/i18n";
+import { raceBlurb } from "../components/RaceDescription";
 
 // Vue par défaut : l'Europe, comme sur le site.
 const EUROPE_BOUNDS = [[38.57, -8.75], [58.57, 24.25]];
@@ -125,7 +126,7 @@ export default function MobileMap() {
             {j != null && <span className="m-label m-label--rust">{t("J-{n}", { n: j })}</span>}
           </div>
           <div className="m-mapsheet-title">{selected.name}</div>
-          {selected.blurb && <p className="m-mapsheet-blurb">{selected.blurb}</p>}
+          {selected.blurb && <p className="m-mapsheet-blurb">{raceBlurb(selected)}</p>}
           <div className="m-stats3 m-stats3--dashed">
             {raceStats(selected).map((s) => <Stat key={s.label} {...s} />)}
           </div>

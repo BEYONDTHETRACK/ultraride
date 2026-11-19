@@ -6,7 +6,7 @@ import { RaceMap, Comments } from "../pages/RaceDetail";
 import { daysUntil, formatDate, formatNumber } from "./data";
 import { isNative } from "../lib/native";
 import { Cover, Pill, Icon, useFavorite, disciplineBg, formatLabel } from "./ui";
-import TranslateButton from "../components/TranslateButton";
+import RaceDescription from "../components/RaceDescription";
 import { t } from "../lib/i18n";
 
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -160,8 +160,7 @@ export default function MobileRaceDetail() {
 
         {(race.long_blurb || race.blurb) && (
           <div>
-            <p className="m-body" lang="fr">{race.long_blurb || race.blurb}</p>
-            <TranslateButton text={race.long_blurb || race.blurb} />
+            <RaceDescription race={race} textClassName="m-body" />
           </div>
         )}
 

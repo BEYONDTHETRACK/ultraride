@@ -144,4 +144,4 @@ export function byStartDate(a, b) {
 
 // Colonnes lues par l'accueil et la page Ultras.
 export const LIST_COLUMNS =
-  "id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_place, end_place, start_date, created_at, view_count, blurb, image_url, organizer_name, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)";
+  "id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_place, end_place, start_date, created_at, view_count, blurb, blurb_en, image_url, organizer_name, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)";

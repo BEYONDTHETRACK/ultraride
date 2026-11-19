@@ -7,6 +7,7 @@ import { getFlagEmoji } from "../lib/emea";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
 import { t, locale } from "../lib/i18n";
+import { raceBlurb } from "./RaceDescription";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -106,7 +107,7 @@ export default function RaceCard({ race }) {
         </div>
 
         <ClampedBlurb expanded={expanded} onToggle={() => setExpanded((v) => !v)}>
-          {race.blurb}
+          {raceBlurb(race)}
         </ClampedBlurb>
 
         <div className="race-card-stats">

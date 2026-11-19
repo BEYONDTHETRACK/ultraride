@@ -8,7 +8,7 @@ import FavoriteButton from "../components/FavoriteButton";
 import { formatPrice } from "../lib/price";
 import { normalizeUrl } from "../lib/organizerLinks";
 import SiteFooter from "../components/SiteFooter";
-import TranslateButton from "../components/TranslateButton";
+import RaceDescription from "../components/RaceDescription";
 import { RaceTile, DisciplineBadge, FormatBadge } from "../components/RaceBits";
 import {
   countdownLabel, formatLongDate, formatNumber, PARCOURS_LABEL, isUpcoming, parseDate, byStartDate,
@@ -501,9 +501,7 @@ export default function RaceDetail() {
           {(race.long_blurb || race.blurb) && (
             <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <h2 className="v2-h3">{t("L'ultra")}</h2>
-              <p className="v2-race-text" lang="fr">{race.long_blurb || race.blurb}</p>
-              {race.terrain && <p className="muted" style={{ margin: 0, fontSize: 15 }}>{t("Terrain : {x}", { x: race.terrain })}</p>}
-              <div><TranslateButton text={[race.long_blurb || race.blurb, race.terrain].filter(Boolean).join("\n\n")} /></div>
+              <RaceDescription race={race} textClassName="v2-race-text" showTerrain />
             </section>
           )}
 
