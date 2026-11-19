@@ -32,9 +32,9 @@
   /* Barre d'onglets : 52 px de contenu, et on rogne 12 px sur la marge de la barre
      d'accueil iOS (comme les barres natives) sans jamais descendre sous 6 px. */
   --m-tabbar:52px;
-  --m-tabbar-pad:max(calc(env(safe-area-inset-bottom) - 12px), 6px);
-  --m-safe-b:env(safe-area-inset-bottom);
-  --m-safe-t:env(safe-area-inset-top);
+  --m-tabbar-pad:max(calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) - 12px), 6px);
+  --m-safe-b:var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
+  --m-safe-t:var(--safe-area-inset-top, env(safe-area-inset-top));
 }
 
 /* ═════════════ Thème sombre (forcé ou suivant l'appareil) ═════════════ */
@@ -375,7 +375,7 @@
   0%{transform:scale(1)} 6%{transform:scale(1.08)} 13%{transform:scale(1)}
   17%{transform:scale(1)} 24%{transform:scale(1.044)} 31%{transform:scale(1)} 100%{transform:scale(1)}
 }
-.app-splash-credit{position:absolute;left:0;right:0;bottom:calc(30px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;}
+.app-splash-credit{position:absolute;left:0;right:0;bottom:calc(30px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));display:flex;flex-direction:column;align-items:center;gap:6px;}
 .app-splash-txt{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;color:#1B2B20;-webkit-text-stroke:.15px #1B2B20;}
 .app-splash-ver{letter-spacing:.1em;font-weight:400;-webkit-text-stroke:0;}
 .app-splash-by{display:flex;align-items:center;gap:10px;}
