@@ -1,0 +1,6 @@
+/* Messages d'autorisation — français */
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "UltraRide utilise ta position, uniquement quand l'app est ouverte, pour te montrer les ultras qui partent près de chez toi. Elle n'est ni enregistrée ni partagée.";
+"NSLocationWhenInUseUsageDescription" = "UltraRide utilise ta position pour te montrer les ultras qui partent près de chez toi. Elle n'est ni enregistrée ni partagée.";
+"NSPhotoLibraryAddUsageDescription" = "UltraRide enregistre l'image de ton Passeport Ultra dans tes photos quand tu le demandes.";
+"NSPhotoLibraryUsageDescription" = "UltraRide accède à tes photos uniquement pour choisir une image, par exemple le logo de ton ultra.";
+"NSCameraUsageDescription" = "UltraRide utilise l'appareil photo uniquement si tu choisis de prendre une photo, par exemple pour le logo de ton ultra.";
