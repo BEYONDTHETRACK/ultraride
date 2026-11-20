@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { trackEvent } from "../lib/analytics";
-import { t } from "../lib/i18n";
+import { t, tn, LangSwitch } from "../lib/i18n";
 
 // Page « Mes liens » pour la bio Instagram / Facebook.
 // URL à mettre en bio (les paramètres utm_ servent à GA4) :
@@ -18,6 +18,7 @@ const LINKS = [
   { id: "ultras", to: "/ultras", title: "Trouve ton prochain ultra", sub: "Route, gravel, VTT : tout le calendrier" },
   { id: "carte", to: "/carte", title: "La carte des départs", sub: "Les ultras près de chez toi" },
   { id: "passeport", to: "/account", title: "Ton Passeport Ultra", sub: "Ton palmarès à partir de tes .fit" },
+  { id: "organisateur", to: "/login?mode=signup", title: "Tu organises un ultra ?", sub: "Crée ta fiche, traduite en anglais automatiquement" },
   { id: "proposer", to: "/proposer-course", title: "Proposer un ultra", sub: "Un ultra manque ? Dis-le-nous" },
   { id: "projet", to: "/le-projet", title: "Le projet UltraRide", sub: "Qui on est, pourquoi on le fait" },
 ];
@@ -43,6 +44,16 @@ export default function Links() {
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [state, setState] = useState({ status: "idle", msg: "" });
+  const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    supabase
+      .from("races")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published")
+      .eq("is_current", true)
+      .then(({ count: n }) => { if (n) setCount(n); });
+  }, []);
 
   useEffect(() => {
     document.title = t("UltraRide — liens");
@@ -83,16 +94,19 @@ export default function Links() {
     <main className="lk">
       <style>{CSS}</style>
       <div className="lk-wrap">
+        <div className="lk-lang"><LangSwitch /></div>
         <header className="lk-head">
           <div className="lk-logo" aria-label="UltraRide">
             <span className="u">U</span><span className="r">R</span>
           </div>
           <h1>Ultra<em>Ride</em></h1>
           <p>{t("Le calendrier des ultras vélo en Europe")}</p>
+          {count && <p className="lk-count">{tn(count, "{n} ultra", "{n} ultras")} · {t("route, gravel, VTT")}</p>}
         </header>
 
         <section className="lk-app" aria-label={t("L'app UltraRide")}>
-          <span className="lk-kicker">{t("L'app est sortie")}</span>
+          <span className="lk-kicker">{t("L'app UltraRide · FR / EN")}</span>
+          <p className="lk-app-sub">{t("Gratuite, en français et en anglais. Les descriptions des ultras sont traduites dans la fiche.")}</p>
           <div className="lk-stores">
             <a href={APP_STORE} target="_blank" rel="noopener noreferrer" onClick={click("app_store")}>
               <small>{t("Télécharger sur")}</small>App Store
@@ -163,6 +177,9 @@ const CSS = `
 .lk-head h1{font-family:Anton,sans-serif;font-weight:400;font-size:40px;text-transform:uppercase;margin:0;letter-spacing:.01em;color:#1B2B20}
 .lk-head h1 em{font-style:normal;color:#C4622D}
 .lk-head p{margin:0;color:#5E6A5F;font-size:15px}
+.lk-head .lk-count{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C4622D;margin-top:2px}
+.lk-lang{display:flex;justify-content:flex-end;margin-bottom:-14px}
+.lk-app-sub{margin:-4px 0 12px;color:#CFC8B8;font-size:14px;line-height:1.45}
 .lk-kicker{display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#E8925A;margin-bottom:10px}
 .lk-app{background:#1B2B20;border-radius:18px;padding:16px}
 .lk-stores{display:grid;grid-template-columns:1fr 1fr;gap:10px}
