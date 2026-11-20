@@ -47,10 +47,13 @@ export default function MobileHome() {
     [races]
   );
 
-  // À la une : l'ultra à venir le plus consulté, de préférence illustré.
+  // À la une : un ultra à venir illustré tiré au hasard à chaque visite
+  // (comme sur la version ordinateur), pour que la une tourne.
   const featured = useMemo(() => {
     if (!upcoming.length) return null;
-    return [...upcoming].sort((a, b) => (b.view_count || 0) - (a.view_count || 0))[0];
+    const withImage = upcoming.filter((r) => r.image_url);
+    const pool = withImage.length ? withImage : upcoming;
+    return pool[Math.floor(Math.random() * pool.length)];
   }, [upcoming]);
 
   const nextDepartures = useMemo(
