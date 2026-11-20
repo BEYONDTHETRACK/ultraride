@@ -51,7 +51,7 @@ export default function Links() {
       .from("races")
       .select("id", { count: "exact", head: true })
       .eq("status", "published")
-      .eq("is_current", true)
+      .gte("start_date", new Date().toISOString().slice(0, 10))
       .then(({ count: n }) => { if (n) setCount(n); });
   }, []);
 
@@ -101,7 +101,7 @@ export default function Links() {
           </div>
           <h1>Ultra<em>Ride</em></h1>
           <p>{t("Le calendrier des ultras vélo en Europe")}</p>
-          {count && <p className="lk-count">{tn(count, "{n} ultra", "{n} ultras")} · {t("route, gravel, VTT")}</p>}
+          {count && <p className="lk-count">{tn(count, "{n} ultra à venir", "{n} ultras à venir")} · {t("route, gravel, VTT")}</p>}
         </header>
 
         <section className="lk-app" aria-label={t("L'app UltraRide")}>

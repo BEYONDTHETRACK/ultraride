@@ -6,6 +6,8 @@ export default {
  "Ultras": "Ultras",
  "Tu organises un ultra ?": "Organising an ultra?",
  "Crée ta fiche, traduite en anglais automatiquement": "Create your race page, translated into English automatically",
+ "{n} ultra à venir": "{n} upcoming ultra",
+ "{n} ultras à venir": "{n} upcoming ultras",
  "route, gravel, VTT": "road, gravel, MTB",
  "L'app UltraRide · FR / EN": "The UltraRide app · FR / EN",
  "Gratuite, en français et en anglais. Les descriptions des ultras sont traduites dans la fiche.": "Free, in French and English. Race descriptions are translated right in the race page.",
