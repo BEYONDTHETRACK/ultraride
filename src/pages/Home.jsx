@@ -198,8 +198,9 @@ export default function Home() {
   // « À la une » : un tirage au hasard parmi les ultras à venir illustrés
   // (tous les ultras à venir si aucun n'a de visuel), refait à chaque visite.
   const featured = useMemo(() => {
-    const withImage = upcoming.filter((r) => r.image_url);
-    return shuffle(withImage.length ? withImage : upcoming).slice(0, SLIDE_COUNT);
+    const pool = upcoming.filter((r) => !/\bBRM\b/i.test(r.name || "")); // pas de BRM à la une
+    const withImage = pool.filter((r) => r.image_url);
+    return shuffle(withImage.length ? withImage : pool).slice(0, SLIDE_COUNT);
   }, [upcoming]);
 
   const nextDepartures = useMemo(() => upcoming.slice(0, 6), [upcoming]);

@@ -50,9 +50,10 @@ export default function MobileHome() {
   // À la une : un ultra à venir illustré tiré au hasard à chaque visite
   // (comme sur la version ordinateur), pour que la une tourne.
   const featured = useMemo(() => {
-    if (!upcoming.length) return null;
-    const withImage = upcoming.filter((r) => r.image_url);
-    const pool = withImage.length ? withImage : upcoming;
+    const candidates = upcoming.filter((r) => !/\bBRM\b/i.test(r.name || "")); // pas de BRM à la une
+    if (!candidates.length) return null;
+    const withImage = candidates.filter((r) => r.image_url);
+    const pool = withImage.length ? withImage : candidates;
     return pool[Math.floor(Math.random() * pool.length)];
   }, [upcoming]);
 
