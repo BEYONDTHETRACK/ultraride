@@ -5,6 +5,10 @@ import SupervisionHeader from "./SupervisionHeader";
 import { Bar, Kpi, fr } from "./AdminOverview";
 
 const DISC_TONE = { Route: "route", Gravel: "gravel", VTT: "vtt" };
+const BOT_LABEL = {
+  google: "Google", bing: "Bing", moteurs: "Autres moteurs (Apple, Yandex, Qwant…)", ia: "IA (ChatGPT, Claude, Perplexity…)",
+  social: "Aperçus de liens (Facebook, WhatsApp, LinkedIn…)", seo: "Outils SEO (Ahrefs, Semrush…)", automatise: "Navigateurs automatisés", autre: "Autres",
+};
 const ROLE_LABEL = { participant: "Participants", organizer: "Organisateurs", admin: "Admins" };
 
 function daysSince(iso) {
@@ -51,6 +55,7 @@ export default function Analytics() {
   const [trackingSince, setTrackingSince] = useState(null);
   const [stats, setStats] = useState(null);
   const [bd, setBd] = useState(null);
+  const [bots, setBots] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +67,9 @@ export default function Analytics() {
     Promise.all([
       supabase.rpc("admin_traffic_stats", { days }),
       supabase.rpc("admin_breakdowns", { days }),
-    ]).then(([s, b]) => {
+      supabase.rpc("admin_bot_kinds", { days }),
+    ]).then(([s, b, k]) => {
+      setBots(k.error ? null : k.data); // facultatif : n'empêche pas le reste
       const err = s.error || b.error;
       if (err) setError(err.message);
       else {
@@ -79,6 +86,7 @@ export default function Analytics() {
   const discTotal = useMemo(() => (bd?.by_discipline || []).reduce((a, x) => a + (x.views || 0), 0), [bd]);
   const countryTotal = useMemo(() => (bd?.by_country || []).reduce((a, x) => a + (x.views || 0), 0), [bd]);
   const roles = bd?.profiles_by_role || {};
+  const botTotal = (bots?.totals || []).reduce((a, x) => a + (x.n || 0), 0);
   const rolesTotal = Object.values(roles).reduce((a, n) => a + n, 0);
 
   const periodLabel = period === "all" ? "depuis le début" : `sur ${period} jours`;
@@ -138,6 +146,16 @@ export default function Analytics() {
             </section>
           </div>
 
+          {bots && (
+            <section className="sv-card">
+              <div className="sv-card-head"><h2>Robots par type</h2><span className="sv-dim">{periodLabel}</span></div>
+              {(bots.totals || []).map((x) => (
+                <Bar key={x.kind} label={BOT_LABEL[x.kind] || x.kind} value={x.n} total={botTotal} tone={x.kind === "google" ? "gravel" : x.kind === "ia" ? "rust" : "dim"} />
+              ))}
+              {!bots.totals?.length && <p className="sv-empty">Pas encore de robot classé (classement actif depuis le 21/11/2026).</p>}
+            </section>
+          )}
+
           <section className="sv-card">
             <div className="sv-card-head"><h2>Fiches les plus vues</h2><span className="sv-dim">{periodLabel}</span></div>
             {stats.top_races?.length ? (
@@ -172,7 +190,7 @@ export default function Analytics() {
                     <tr key={d.day}>
                       <td className="mono">{new Date(d.day).toLocaleDateString("fr-FR")}</td>
                       <td className="num mono">{d.visits}</td>
-                      <td className="num mono sv-dim">{d.bots}</td>
+                      <td className="num mono sv-dim" title={bots?.daily?.[d.day] ? Object.entries(bots.daily[d.day]).map(([k, n]) => `${BOT_LABEL[k] || k} : ${n}`).join("\n") : undefined}>{d.bots}</td>
                       <td className="num mono">{d.views}</td>
                       <td className="num mono">{d.comments}</td>
                       <td className="num mono">{d.signups}</td>
