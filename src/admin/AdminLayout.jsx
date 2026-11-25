@@ -14,6 +14,7 @@ const ICONS = {
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c1-3.5 3.6-5 6.5-5s5.5 1.5 6.5 5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 3 2.2 3.5 5" /></>,
   organizers: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
   instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /></>,
+  notifications: <><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8" /><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0" /></>,
   images: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 8" /></>,
 };
 
@@ -88,6 +89,7 @@ export default function AdminLayout() {
     { to: "/admin/submissions", label: "Propositions", icon: "submissions", count: counts.submissions },
     { to: "/admin/users", label: "Comptes", icon: "users" },
     { to: "/admin/organizers", label: "Organisateurs", icon: "organizers" },
+    { to: "/admin/notifications", label: "Notifications", icon: "notifications" },
     { to: "/admin/instagram", label: "Instagram", icon: "instagram" },
     { to: "/admin/images", label: "Images", icon: "images" },
   ];

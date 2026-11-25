@@ -3,6 +3,8 @@
 //
 //   - « Nouvel ultra »          → topic nouveaux-ultras
 //   - « Des ultras sont à jour » → topic mises-a-jour
+//   - Annonce libre (corps { custom: {...} }) → un sujet ou les deux, sans doublon
+//     (onglet « Notifications » de l'admin, ou tâche planifiée)
 //
 // Une vague est envoyée quand rien de neuf n'est arrivé dans la file depuis
 // QUIET_MINUTES : valider 15 fiches d'affilée donne une seule notification.
@@ -36,22 +38,35 @@ function json(body: unknown, status = 200) {
 
 /* ---------- authentification ---------- */
 
-async function authorize(req: Request, supabase: SupabaseClient): Promise<"cron" | "manual" | null> {
+type Caller = { kind: "cron" | "manual"; userId: string | null } | null;
+
+// Utilisateur derrière un jeton de session : appel direct à /auth/v1/user
+// (getUser(jwt) répond parfois « Auth session missing » côté serveur).
+async function userIdFromJwt(jwt: string): Promise<string | null> {
+  const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/user`, {
+    headers: { Authorization: `Bearer ${jwt}`, apikey: Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! },
+  });
+  if (!res.ok) return null;
+  const u = await res.json();
+  return u?.id || null;
+}
+
+async function authorize(req: Request, supabase: SupabaseClient): Promise<Caller> {
   const cronSecret = Deno.env.get("CRON_SECRET");
   const sentSecret = req.headers.get("x-cron-secret");
-  if (cronSecret && sentSecret && sentSecret === cronSecret) return "cron";
+  if (cronSecret && sentSecret && sentSecret === cronSecret) return { kind: "cron", userId: null };
   // Jeton de la tâche planifiée rangé dans le coffre Supabase (race_check_token).
   if (sentSecret) {
     const { data: ok } = await supabase.rpc("race_check_token_ok", { p_token: sentSecret });
-    if (ok === true) return "cron";
+    if (ok === true) return { kind: "cron", userId: null };
   }
 
   const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!jwt) return null;
-  const { data, error } = await supabase.auth.getUser(jwt);
-  if (error || !data?.user) return null;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-  return profile?.role === "admin" ? "manual" : null;
+  const userId = await userIdFromJwt(jwt);
+  if (!userId) return null;
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  return profile?.role === "admin" ? { kind: "manual", userId } : null;
 }
 
 /* ---------- Firebase Cloud Messaging (API HTTP v1) ---------- */
@@ -174,23 +189,33 @@ Deno.serve(async (req) => {
     const all = Object.values(TOPIC) as string[];
     const topic = c.topic || "all";
     if (topic !== "all" && !all.includes(topic)) return json({ error: "Sujet inconnu" }, 400);
-    if (!c.title || !c.body || typeof c.url !== "string" || !c.url.startsWith("/")) {
-      return json({ error: "title, body et url (chemin commençant par /) sont requis" }, 400);
+    if (!c.title?.trim() || !c.body?.trim()) return json({ error: "Titre et message requis" }, 400);
+    // Lien : chemin du site (/ultras) ou adresse ultraride.eu ; tout autre lien est ramené à l'accueil.
+    let path = (c.url || "/").trim();
+    if (/^(www\.)?ultraride\.eu(\/|$)/i.test(path)) path = "https://" + path;
+    if (/^https?:\/\//i.test(path)) {
+      try {
+        const u = new URL(path);
+        path = /(^|\.)ultraride\.eu$/i.test(u.hostname) ? (u.pathname + u.search) || "/" : "/";
+      } catch { path = "/"; }
     }
+    if (!path.startsWith("/")) path = "/" + path;
+    c.url = path;
     const target = topic === "all"
       ? { condition: all.map((t) => `'${t}' in topics`).join(" || ") }
       : { topic };
     let sendError: string | null = null;
     try {
       const token = await accessToken(sa);
-      await sendMessage(sa, token, target, c.title.slice(0, 120), c.body.slice(0, 240), c.url);
+      await sendMessage(sa, token, target, c.title.trim().slice(0, 120), c.body.trim().slice(0, 240), c.url);
     } catch (e) {
       sendError = e instanceof Error ? e.message : String(e);
     }
     await supabase.from("push_notifications").insert({
-      kind: "custom", title: c.title, body: c.body, url: `${SITE}${c.url}`, race_count: 0, error: sendError,
+      kind: "custom", title: c.title.trim(), body: c.body.trim(), url: `${SITE}${c.url}`, race_count: 0, error: sendError,
+      topic, sent_by: caller.userId,
     });
-    return json({ sent: [{ kind: "custom", topic, title: c.title, error: sendError }] }, sendError ? 502 : 200);
+    return json({ sent: [{ kind: "custom", topic, title: c.title, url: c.url, error: sendError }] }, sendError ? 502 : 200);
   }
 
   const { data: queue, error } = await supabase
@@ -210,7 +235,7 @@ Deno.serve(async (req) => {
 
     // Vague encore en cours : on attend la fin (sauf envoi manuel).
     const newest = new Date(rows[rows.length - 1].created_at).getTime();
-    if (caller === "cron" && Date.now() - newest < QUIET_MINUTES * 60_000) {
+    if (caller.kind === "cron" && Date.now() - newest < QUIET_MINUTES * 60_000) {
       report.push({ kind, waiting: rows.length });
       continue;
     }
@@ -242,6 +267,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("push_notifications").insert({
       kind, title: msg.title, body: msg.body, url: `${SITE}${msg.url}`, race_count: list.length, error: sendError,
+      topic: TOPIC[kind], sent_by: caller.userId,
     });
     // En cas d'échec, la file reste en attente et sera retentée au prochain passage.
     if (!sendError) {

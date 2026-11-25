@@ -45,6 +45,7 @@ import InstagramGenerator from "./admin/InstagramGenerator";
 import ImageOptimizer from "./admin/ImageOptimizer";
 import QualityFamily from "./admin/QualityFamily";
 import RaceUpdates from "./admin/RaceUpdates";
+import NotificationsSender from "./admin/NotificationsSender";
 import { trackVisit } from "./lib/trackVisit";
 
 // Compte Google / Apple pas encore finalisé (rôle + CGU) → /bienvenue,
@@ -106,6 +107,7 @@ export default function App() {
           <Route path="users" element={<UsersManager />} />
           <Route path="organizers" element={<OrganizersManager />} />
           <Route path="submissions" element={<RaceSubmissions />} />
+          <Route path="notifications" element={<NotificationsSender />} />
           <Route path="instagram" element={<InstagramGenerator />} />
           <Route path="images" element={<ImageOptimizer />} />
           <Route path="mises-a-jour" element={<RaceUpdates />} />
